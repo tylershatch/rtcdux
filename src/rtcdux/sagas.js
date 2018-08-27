@@ -53,13 +53,6 @@ export function* rtcSaga(dispatch) {
       let sfuLocalUpstreamCreate = ActionCreator.SfuLocalUpstreamCreate(dispatch, mediaId);
       yield put(sfuLocalUpstreamCreate);
       yield put(ActionCreator.SfuLocalUpstreamOpenRequest(sfuLocalUpstreamCreate.connectionId));
-
-      // For each remote client, tell it to create a remote media object associated with this local media object
-      let localClientId = yield select((state) => state.localClientId);
-      let remoteClientList = yield select((state) => state.remoteClientList);
-      for (let remoteClientId in remoteClientList) {
-        Effect.DispatchToRemoteClient(remoteClientId, "RemoteMediaCreate", mediaId, localMediaList[mediaId].name, localClientId, localMediaList[mediaId].sfuConnectionId);
-      }
     }
   });
 
@@ -77,40 +70,69 @@ export function* rtcSaga(dispatch) {
     // For each local media object, tell the remote client to create an associated remote media object
     let localMediaList = yield select((state) => state.localMediaList);
     for (let mediaId in localMediaList) {
-      Effect.DispatchToRemoteClient(action.remoteClientId, "RemoteMediaCreate", mediaId, localMediaList[mediaId].name, localMediaList[mediaId].sfuConnectionId);
+      Effect.DispatchToRemoteClient(action.remoteClientId, "RemoteMediaCreate", mediaId, localMediaList[mediaId].name, localClientId);
     }
   });
 
   yield takeEvery(ActionType.RemoteClientDestroy, function*(action) {
-    // For each local media object, tell the remote client to destroy its associated remote media object
-    let localMediaList = yield select((state) => state.localMediaList);
-    for (let mediaId in localMediaList) {
-      Effect.DispatchToRemoteClient(action.remoteClientId, "RemoteMediaDestroy", mediaId);
-    }
-  });
-
-  yield takeEvery(ActionType.WebcamCaptureResolve, function*(action) {
-    // If we are connected to a channel, create and open an sfu upstream connection for this local media object
-    let channelStatus = yield select((state) => state.channelStatus);
-    if (channelStatus === "JOINED") {
-      let sfuLocalUpstreamCreate = ActionCreator.SfuLocalUpstreamCreate(dispatch, action.mediaId);
-      yield put(sfuLocalUpstreamCreate);
-      yield put(ActionCreator.SfuLocalUpstreamOpenRequest(sfuLocalUpstreamCreate.connectionId));
-
-      // For each remote client, tell it to create a remote media object associated with thie local media object
-      let localClientId = yield select((state) => state.localClientId);
-      let remoteClientList = yield select((state) => state.remoteClientList);
-      for (let remoteClientId in remoteClientList) {
-        Effect.DispatchToRemoteClient(remoteClientId, "RemoteMediaCreate", action.mediaId, action.name, localClientId, sfuLocalUpstreamCreate.connectionId);
+    // For each remote media object, if it is from the remote client, destroy it
+    let remoteMediaList = yield select((state) => state.remoteMediaList);
+    for (let mediaId in remoteMediaList) {
+      if (remoteMediaList[mediaId].remoteClientId == action.remoteClientId) {
+        yield put(ActionCreator.RemoteMediaDestroy(mediaId));
       }
     }
   });
 
-  yield takeEvery(ActionType.RemoteMediaCreate, function*(action) {
-    // If we have a remote sfu upstream connection for this remote media object, create an associated sfu downstream connection
+  yield takeEvery(ActionType.WebcamCaptureResolve, function*(action) {
+    // If we are connected to a channel
+    let channelStatus = yield select((state) => state.channelStatus);
+    if (channelStatus === "JOINED") {
+      // For each remote client, tell it to create a remote media object associated with this local media object
+      let localClientId = yield select((state) => state.localClientId);
+      let remoteClientList = yield select((state) => state.remoteClientList);
+      for (let remoteClientId in remoteClientList) {
+        Effect.DispatchToRemoteClient(remoteClientId, "RemoteMediaCreate", action.mediaId, action.name, localClientId);
+      }
+
+      // Create and open an sfu upstream connection for this local media object
+      let sfuLocalUpstreamCreate = ActionCreator.SfuLocalUpstreamCreate(dispatch, action.mediaId);
+      yield put(sfuLocalUpstreamCreate);
+      yield put(ActionCreator.SfuLocalUpstreamOpenRequest(sfuLocalUpstreamCreate.connectionId));
+    }
+  });
+
+  yield takeEvery(ActionType.LocalMediaReleaseResolve, function*(action) {
+    // For each remote client, tell it to destroy the remote media object associated with this local media object
+    let remoteClientList = yield select((state) => state.remoteClientList);
+    for (let remoteClientId in remoteClientList) {
+      Effect.DispatchToRemoteClient(remoteClientId, "RemoteMediaDestroy", action.mediaId, action.name);
+    }
+  });
+
+  yield takeEvery(ActionType.SfuLocalUpstreamCreate, function*(action) {
+    // For each remote client, update the remote sfu id for the remote media object associated with this local sfu's local media object
+    let remoteClientList = yield select((state) => state.remoteClientList);
+    for (let remoteClientId in remoteClientList) {
+      yield Effect.DispatchToRemoteClient(remoteClientId, "RemoteMediaSfuUpdate", action.mediaId, action.connectionId);
+    }
+  });
+
+  yield takeEvery(ActionType.RemoteMediaSfuUpdate, function*(action) {
+    // (???) If we have a remote sfu upstream connection for this remote media object, create an associated sfu downstream connection
+    let remoteMediaList = yield select((state) => state.remoteMediaList);
     let sfuRemoteUpstreamList = yield select((state) => state.sfuRemoteUpstreamList);
-    if (action.sfuConnectionId in sfuRemoteUpstreamList) {
-      yield put(ActionCreator.SfuDownstreamCreate(dispatch, action.sfuConnectionId, action.mediaId, action.remoteClientId));
+    if (action.connectionId in sfuRemoteUpstreamList) {
+      yield put(ActionCreator.SfuDownstreamCreate(dispatch, action.connectionId, action.mediaId, remoteMediaList[action.mediaId].remoteClientId));
+    }
+  });
+
+  yield takeEvery(ActionType.RemoteMediaSfuUpdate, function*(action) {
+    // (???) If we have a remote sfu upstream connection for this remote media object, create an associated sfu downstream connection
+    let remoteMediaList = yield select((state) => state.remoteMediaList);
+    let sfuRemoteUpstreamList = yield select((state) => state.sfuRemoteUpstreamList);
+    if (action.connectionId in sfuRemoteUpstreamList) {
+      yield put(ActionCreator.SfuDownstreamCreate(dispatch, action.connectionId, action.mediaId, remoteMediaList[action.mediaId].remoteClientId));
     }
   });
 

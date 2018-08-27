@@ -20,6 +20,7 @@ export const ActionType = {
     LocalMediaReleaseReject : "LocalMediaReleaseReject",
     RemoteMediaCreate : "RemoteMediaCreate",
     RemoteMediaDestroy : "RemoteMediaDestroy",
+    RemoteMediaSfuUpdate: "RemoteMediaSfuUpdate",
     SfuLocalUpstreamCreate : "SfuLocalUpstreamCreate",
     SfuLocalUpstreamDestroy : "SfuLocalUpstreamDestroy",
     SfuLocalUpstreamStatusChange : "SfuLocalUpstreamStatusChange",

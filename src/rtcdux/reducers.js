@@ -40,8 +40,9 @@ function localMediaList(state = {}, action) {
 
 function remoteMediaList(state = {}, action) {
   switch(action.type) {
-    case ActionType.RemoteMediaCreate:                 return {...state, [action.mediaId]: {name: action.name, remoteClientId: action.remoteClientId, sfuConnectionId: action.sfuConnectionId}};
+    case ActionType.RemoteMediaCreate:                 return {...state, [action.mediaId]: {name: action.name, remoteClientId: action.remoteClientId, sfuConnectionId: null}};
     case ActionType.RemoteMediaDestroy:                return omit(state, action.mediaId);
+    case ActionType.RemoteMediaSfuUpdate:              return {...state, [action.mediaId]: {...state[action.mediaId], sfuConnectionId: action.connectionId}};
     default: return state;
   }
 }

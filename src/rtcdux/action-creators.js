@@ -27,19 +27,7 @@ export const ActionCreator = {
   ChannelJoinResolve: function(dispatch, channel) {
     Liveswitch.channel = channel;
     
-    let remoteClientInfos = channel.getRemoteClientInfos()
-    for (let i in remoteClientInfos) {
-      dispatch(ActionCreator.RemoteClientCreate(remoteClientInfos[i]));
-    }
-
-    channel.addOnRemoteClientJoin((remoteClientInfo) => {
-      dispatch(ActionCreator.RemoteClientCreate(remoteClientInfo));
-    });
-
-    channel.addOnRemoteClientLeave((remoteClientInfo) => {
-      dispatch(ActionCreator.RemoteClientDestroy(remoteClientInfo.getId()));
-    });
-
+    // Handle actions dispatched from a remote client
     channel.addOnClientMessage((remoteClientInfo, message) => {
       let remoteAction = JSON.parse(message);
       let actionCreator = ActionCreator[remoteAction.actionCreator];
@@ -47,9 +35,34 @@ export const ActionCreator = {
       dispatch(actionCreator(...actionCreatorArgs));
     });
 
-    channel.addOnRemoteUpstreamConnectionOpen((remoteConnectionInfo) => {
-      if (remoteConnectionInfo.getType() === "sfu") {
-        dispatch(ActionCreator.SfuRemoteUpstreamCreate(remoteConnectionInfo));
+    // Create all existing remote clients
+    let remoteClientInfos = channel.getRemoteClientInfos()
+    for (let i in remoteClientInfos) {
+      dispatch(ActionCreator.RemoteClientCreate(remoteClientInfos[i]));
+    }
+
+    // If a new remote client joins, create that client
+    channel.addOnRemoteClientJoin((remoteClientInfo) => {
+      dispatch(ActionCreator.RemoteClientCreate(remoteClientInfo));
+    });
+
+    // If a remote client leaves, destroy that client
+    channel.addOnRemoteClientLeave((remoteClientInfo) => {
+      dispatch(ActionCreator.RemoteClientDestroy(remoteClientInfo.getId()));
+    });
+
+    // Create all existing remote upstream connections
+    let remoteUpstreamConnectionInfos = channel.getRemoteUpstreamConnectionInfos()
+    for (let i in remoteUpstreamConnectionInfos) {
+      if (remoteUpstreamConnectionInfos[i].getType() === "sfu") {
+        dispatch(ActionCreator.SfuRemoteUpstreamCreate(remoteUpstreamConnectionInfos[i]));
+      }
+    }
+
+    // If a new remote upstream connection is opened, create that connection
+    channel.addOnRemoteUpstreamConnectionOpen((remoteUpstreamConnectionInfo) => {
+      if (remoteUpstreamConnectionInfo.getType() === "sfu") {
+        dispatch(ActionCreator.SfuRemoteUpstreamCreate(remoteUpstreamConnectionInfo));
       }
     });
 
@@ -155,6 +168,7 @@ export const ActionCreator = {
   LocalMediaReleaseRequest       : makeActionCreator(ActionType.LocalMediaReleaseRequest, "mediaId"),
   LocalMediaReleaseResolve       : makeActionCreator(ActionType.LocalMediaReleaseResolve, "mediaId"),
   LocalMediaReleaseReject        : makeActionCreator(ActionType.LocalMediaReleaseReject, "mediaId"),
+  RemoteMediaSfuUpdate           : makeActionCreator(ActionType.RemoteMediaSfuUpdate, "mediaId", "connectionId"),
   SfuLocalUpstreamStatusChange   : makeActionCreator(ActionType.SfuLocalUpstreamStatusChange, "connectionId", "status"),
   SfuLocalUpstreamOpenRequest    : makeActionCreator(ActionType.SfuLocalUpstreamOpenRequest, "connectionId"),
   SfuLocalUpstreamOpenResolve    : makeActionCreator(ActionType.SfuLocalUpstreamOpenResolve, "connectionId"),
