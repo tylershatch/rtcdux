@@ -32,8 +32,8 @@ function remoteClientList(state = {}, action) {
 
 function localMediaList(state = {}, action) {
   switch(action.type) {
-    case ActionType.WebcamCaptureResolve:              return {...state, [action.mediaId]: {name: "webcam"}};
-    case ActionType.LocalMediaReleaseResolve:          return omit(state, action.mediaId);
+    case ActionType.WebcamCaptureResolve:               return {...state, [action.mediaId]: {name: "webcam", sfuConnectionId: null}};
+    case ActionType.LocalMediaReleaseResolve:           return omit(state, action.mediaId);
     default: return state;
   }
 }

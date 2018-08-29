@@ -111,7 +111,7 @@ class Interface extends Component {
                           if (remoteMedia.remoteClientId === remoteClientId) {
                             for (let connectionId in this.props.sfuDownstreamList) {
                               let sfuDownstream = this.props.sfuDownstreamList[connectionId];
-                              if (sfuDownstream.mediaId == mediaId) {
+                              if (sfuDownstream.mediaId === mediaId) {
                                 return (
                                   <RemoteMedia 
                                     key={mediaId}
@@ -125,9 +125,9 @@ class Interface extends Component {
                                 );
                               }
                             }
-                          } else {
-                            return null;
                           }
+                          
+                          return null;
                         })
                       }
                     </div>

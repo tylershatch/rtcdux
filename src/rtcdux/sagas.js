@@ -14,6 +14,16 @@ function getParamNames(func) {
   return result;
 }
 
+function selectSfuUpstreamForLocalMedia(state, mediaId) {
+  for (let connectionId in state.sfuLocalUpstreamList) {
+    if (state.sfuLocalUpstreamList[connectionId].mediaId === mediaId) {
+      return connectionId;
+    }
+  }
+
+  return null;
+}
+
 export function* rtcSaga(dispatch) {
 
   // Bind reject/resolve callbacks
@@ -48,7 +58,6 @@ export function* rtcSaga(dispatch) {
     // For each local media object
     let localMediaList = yield select((state) => state.localMediaList);
     for (let mediaId in localMediaList) {
-
       // Create and open an upstream sfu connection for this local media object
       let sfuLocalUpstreamCreate = ActionCreator.SfuLocalUpstreamCreate(dispatch, mediaId);
       yield put(sfuLocalUpstreamCreate);
@@ -71,6 +80,12 @@ export function* rtcSaga(dispatch) {
     let localMediaList = yield select((state) => state.localMediaList);
     for (let mediaId in localMediaList) {
       Effect.DispatchToRemoteClient(action.remoteClientId, "RemoteMediaCreate", mediaId, localMediaList[mediaId].name, localClientId);
+      // If this local media object has an associated sfu upstream connection, tell the remote client to
+      // create and associated sfu downstream connection
+      let connectionId = yield select((state) => selectSfuUpstreamForLocalMedia(state, mediaId))
+      if (connectionId !== null) {
+        Effect.DispatchToRemoteClient(action.remoteClientId, "RemoteMediaSfuUpdate", mediaId, connectionId);
+      }
     }
   });
 
@@ -78,7 +93,7 @@ export function* rtcSaga(dispatch) {
     // For each remote media object, if it is from the remote client, destroy it
     let remoteMediaList = yield select((state) => state.remoteMediaList);
     for (let mediaId in remoteMediaList) {
-      if (remoteMediaList[mediaId].remoteClientId == action.remoteClientId) {
+      if (remoteMediaList[mediaId].remoteClientId === action.remoteClientId) {
         yield put(ActionCreator.RemoteMediaDestroy(mediaId));
       }
     }
@@ -140,7 +155,7 @@ export function* rtcSaga(dispatch) {
     // If we have a remote media object for this sfu remote upstream connection, create an associated sfu downstream connection
     let remoteMediaList = yield select((state) => state.remoteMediaList);
     for (let mediaId in remoteMediaList) {
-      if (remoteMediaList[mediaId].sfuConnectionId == action.connectionId) {
+      if (remoteMediaList[mediaId].sfuConnectionId === action.connectionId) {
         yield put(ActionCreator.SfuDownstreamCreate(dispatch, action.connectionId, mediaId, action.remoteClientId));
         break;
       }
