@@ -1,28 +1,42 @@
 {
   "name": "rtcdux",
   "version": "0.1.0",
+  "main": "index.js",
   "private": true,
   "dependencies": {
-    "babel-core": "^6.26.3",
-    "babel-jest": "^23.4.2",
+    "@types/lodash": "^4.14.116",
+    "@types/react": "^16.4.13",
+    "@types/react-dom": "^16.0.7",
+    "@types/react-router-dom": "^4.3.0",
+    "es6-promise": "^4.2.4",
     "lodash": "^4.17.10",
     "react": "^16.4.2",
     "react-bootstrap": "^0.32.3",
     "react-dom": "^16.4.2",
     "react-redux": "^5.0.7",
-    "react-scripts": "1.1.4",
     "redux": "^4.0.0",
-    "redux-loop": "^4.3.3",
     "redux-saga": "^0.16.0",
     "regenerator-runtime": "^0.12.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "jest"
+    "start": "webpack-dev-server --mode development --open",
+    "build": "webpack --mode production"
   },
   "devDependencies": {
-    "jest": "^23.5.0",
-    "redux-devtools-extension": "^2.13.5"
+    "@babel/core": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "@babel/preset-react": "^7.0.0",
+    "@babel/preset-typescript": "^7.0.0",
+    "@types/webpack-env": "^1.13.6",
+    "awesome-typescript-loader": "^5.2.0",
+    "babel-loader": "^8.0.0",
+    "redux-devtools-extension": "^2.13.5",
+    "source-map-loader": "^0.2.4",
+    "ts-loader": "^4.5.0",
+    "typesafe-actions": "^2.0.4",
+    "typescript": "^3.0.3",
+    "webpack": "^4.17.1",
+    "webpack-cli": "^3.1.0",
+    "webpack-dev-server": "^3.1.7"
   }
 }

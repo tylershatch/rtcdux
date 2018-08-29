@@ -1,4 +1,5 @@
-import { Liveswitch } from './liveswitch';
+import { Liveswitch, LiveswitchApi } from './liveswitch';
+import { Promise } from 'es6-promise';
 
 function makePromise(requestCallback, resolveCallback) {
   return new Promise((resolve, reject) => {
@@ -15,14 +16,14 @@ let g_appId = "my-app2";
 export const Effect = {
 
   ServerConnect: function() {
-    window.fm.liveswitch.Plugin.setChromeExtensionId('minnnhgjfmbfkdficcmlgoecchcbgnac');
+    LiveswitchApi.Plugin.setChromeExtensionId('minnnhgjfmbfkdficcmlgoecchcbgnac');
   
-    window.fm.liveswitch.Log.setLogLevel(window.fm.liveswitch.LogLevel.Debug);
-    window.fm.liveswitch.Log.registerProvider(new window.fm.liveswitch.ConsoleLogProvider(window.fm.liveswitch.LogLevel.Debug));
+    LiveswitchApi.Log.setLogLevel(LiveswitchApi.LogLevel.Debug);
+    LiveswitchApi.Log.registerProvider(new LiveswitchApi.ConsoleLogProvider(LiveswitchApi.LogLevel.Debug));
   
-    Liveswitch.localClient = new window.fm.liveswitch.Client("https://liveswitch.spatial.is:8443/sync", g_appId, "my-name4", "00000000-0000-0000-000000000000", null, ["role1", "role2"]);
+    Liveswitch.localClient = new LiveswitchApi.Client("https://liveswitch.spatial.is:8443/sync", g_appId, "my-name4", "00000000-0000-0000-000000000000", null, ["role1", "role2"]);
 
-    let registerToken = window.fm.liveswitch.Token.generateClientRegisterToken(
+    let registerToken = LiveswitchApi.Token.generateClientRegisterToken(
       g_appId,
       Liveswitch.localClient.getUserId(),
       Liveswitch.localClient.getDeviceId(),
@@ -43,12 +44,12 @@ export const Effect = {
       throw new Error("Can't join channel with empty ('') channelId");
     }
 
-    let joinToken = window.fm.liveswitch.Token.generateClientJoinToken(
+    let joinToken = LiveswitchApi.Token.generateClientJoinToken(
       g_appId,
       Liveswitch.localClient.getUserId(),
       Liveswitch.localClient.getDeviceId(),
       Liveswitch.localClient.getId(),
-      new window.fm.liveswitch.ChannelClaim(channelId),
+      new LiveswitchApi.ChannelClaim(channelId),
       "--replaceThisWithYourOwnSharedSecret--"
     );
       
@@ -78,7 +79,7 @@ export const Effect = {
   },
   
   WebcamCapture: function() {
-    var localMedia = new window.fm.liveswitch.LocalMedia(true, true);
+    var localMedia = new LiveswitchApi.LocalMedia(true, true);
     var mediaId = localMedia.getId();
 
     return makePromise(

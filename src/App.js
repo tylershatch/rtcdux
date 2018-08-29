@@ -6,9 +6,7 @@ import {
   FormControl
 } from 'react-bootstrap';
 
-import './App.css';
-
-import { ActionCreator } from './rtcdux/action-creators';
+import * as rtc from './rtcdux/actions';
 import { Liveswitch } from './rtcdux/liveswitch';
 
 const LocalMedia = (props) => {
@@ -165,31 +163,31 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     connectToServer: () => {
-      dispatch(ActionCreator.ServerConnectRequest());
+      dispatch(rtc.ServerConnectRequest());
     },
 
     joinChannel: (channelId) => {
-      dispatch(ActionCreator.ChannelJoinRequest(channelId));
+      dispatch(rtc.ChannelJoinRequest(channelId));
     },
 
     leaveChannel: () => {
-      dispatch(ActionCreator.ChannelLeaveRequest());
+      dispatch(rtc.ChannelLeaveRequest());
     },
 
     captureWebcam: () => {
-      dispatch(ActionCreator.WebcamCaptureRequest());
+      dispatch(rtc.WebcamCaptureRequest());
     },
 
     releaseLocalMedia: (mediaId) => {
-      dispatch(ActionCreator.LocalMediaReleaseRequest(mediaId));
+      dispatch(rtc.LocalMediaReleaseRequest(mediaId));
     },
     
     openSfuDownstream: (connectionId) => {
-      dispatch(ActionCreator.SfuDownstreamOpenRequest(connectionId));
+      dispatch(rtc.SfuDownstreamOpenRequest(connectionId));
     },
 
     closeSfuDownstream: (connectionId) => {
-      dispatch(ActionCreator.SfuDownstreamCloseRequest(connectionId));
+      dispatch(rtc.SfuDownstreamCloseRequest(connectionId));
     }
   }
 }
