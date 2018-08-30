@@ -18,7 +18,7 @@ type RtcAction = ActionType<typeof rtc>;
 
 function localClientId(state: string = null, action: RtcAction) {
   switch(action.type) {
-    case getType(rtc.ServerConnectResolve):              return action.payload;
+    case getType(rtc.ServerConnectResolve):              return action.payload.localClientId;
     default: return state;
   }
 }
@@ -37,8 +37,8 @@ function channelStatus(state: string = 'LEFT', action: RtcAction) {
 
 function remoteClientList(state: ReadonlySet<string> = new Set(), action: RtcAction) {
   switch(action.type) {
-    case getType(rtc.RemoteClientCreate):                  return [...state, action.payload];
-    case getType(rtc.RemoteClientDestroy):                 return omit(state, action.payload);
+    case getType(rtc.RemoteClientCreate):                  return [...state, action.payload.remoteClientId];
+    case getType(rtc.RemoteClientDestroy):                 return omit(state, action.payload.remoteClientId);
     default: return state;
   }
 }
@@ -46,7 +46,7 @@ function remoteClientList(state: ReadonlySet<string> = new Set(), action: RtcAct
 function localMediaList(state: ReadonlyMap<string, LocalMedia> = new Map(), action: RtcAction) {
   switch(action.type) {
     case getType(rtc.WebcamCaptureResolve):               return {...state, [action.payload.mediaId]: action.payload};
-    case getType(rtc.LocalMediaReleaseResolve):           return omit(state, action.payload);
+    case getType(rtc.LocalMediaReleaseResolve):           return omit(state, action.payload.mediaId);
     default: return state;
   }
 }

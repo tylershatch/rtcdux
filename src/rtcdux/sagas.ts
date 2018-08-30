@@ -6,20 +6,18 @@ import {
 } from "typesafe-actions";
 
 import * as rtc from './actions';
-type RtcAction = ActionType<typeof rtc>;
-
 import { Effect } from './effects';
 import { State } from './reducers';
 
-// const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
-// const ARGUMENT_NAMES = /([^\s,]+)/g;
-// function getParamNames(func) {
-//   let fnStr = func.toString().replace(STRIP_COMMENTS, '');
-//   let result = fnStr.slice(fnStr.indexOf('(')+1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
-//   if(result === null)
-//      result = [];
-//   return result;
-// }
+const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
+const ARGUMENT_NAMES = /([^\s,]+)/g;
+function getParamNames(func) {
+  let fnStr = func.toString().replace(STRIP_COMMENTS, '');
+  let result = fnStr.slice(fnStr.indexOf('(')+1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
+  if(result === null)
+     result = [];
+  return result;
+}
 
 function selectSfuForLocalMedia(state: State, mediaId) {
   for (let connectionId in state.sfuLocalUpstreamList) {
@@ -48,32 +46,34 @@ function selectRemoteClientForRemoteMedia(state: State, mediaId) {
 export function* rtcSaga(dispatch) {
 
   // Bind reject/resolve callbacks
-  // yield takeEvery('*', function*(action){
-  //   if (action.type.endsWith('Request')) {
-  //     let effectName = action.type.slice(0, -'Request'.length);
+  yield takeEvery('*', function*(action){
+    if (action.type.endsWith('Request')) {
+      let effectName = action.type.slice(0, -'Request'.length);
 
-  //     let effect = Effect[effectName];
-  //     let effectParams = getParamNames(effect).map((name) => ((name === "dispatch") ? dispatch : action[name]));
+      let effect = Effect[effectName];
+      let effectParams = getParamNames(effect).map((name) => ((name === "dispatch") ? dispatch : (action as any).payload[name]));
 
-  //     let resolveActionCreator = ActionCreator[effectName + "Resolve"];
-  //     let rejectActionCreator = ActionCreator[effectName + "Reject"];
+      let resolveActionCreator = rtc[effectName + "Resolve"];
+      let rejectActionCreator = rtc[effectName + "Reject"];
       
-  //     try {
-  //       let params = getParamNames(resolveActionCreator);
-  //       let passDispatch = Object.values(params)[0] === "dispatch";
-  //       let result = yield call(effect, ...effectParams);
-  //       if (passDispatch) {
-  //         yield put(resolveActionCreator(dispatch, result));
-  //       } else {
-  //         yield put(resolveActionCreator(result));
-  //       }
-  //     } catch (error) {
-  //       console.log({action, error});
-  //       console.log(error.stack);
-  //       yield put(rejectActionCreator(error));
-  //     }
-  //   }
-  // });
+      try {
+        let params = getParamNames(resolveActionCreator);
+        let passDispatch = Object.values(params)[0] === "dispatch";
+        // HACK typescript does not support variadic arguments i guess, so must
+        // coerce 'call' to type 'any'
+        let result = yield (call as any)(effect, ...effectParams);
+        if (passDispatch) {
+          yield put(resolveActionCreator({dispatch, [params[1]]: result}));
+        } else {
+          yield put(resolveActionCreator({[params[0]]: result}));
+        }
+      } catch (error) {
+        console.log({action, error});
+        console.log(error.stack);
+        yield put(rejectActionCreator(error));
+      }
+    }
+  });
 
   yield takeEvery(getType(rtc.ChannelJoinResolve), function*(action: ActionType<typeof rtc.ChannelJoinResolve>) {
     // For each local media object
@@ -82,7 +82,7 @@ export function* rtcSaga(dispatch) {
       // Create and open an upstream sfu connection for this local media object
       let sfuLocalUpstreamCreate = rtc.SfuLocalUpstreamCreate(dispatch, mediaId);
       yield put(sfuLocalUpstreamCreate);
-      yield put(rtc.SfuLocalUpstreamOpenRequest(sfuLocalUpstreamCreate.payload.connectionId));
+      yield put(rtc.SfuLocalUpstreamOpenRequest({connectionId: sfuLocalUpstreamCreate.payload.connectionId}));
     }
   });
 
@@ -134,7 +134,7 @@ export function* rtcSaga(dispatch) {
       // Create and open an sfu upstream connection for this local media object
       let sfuLocalUpstreamCreate = rtc.SfuLocalUpstreamCreate(dispatch, action.payload.mediaId);
       yield put(sfuLocalUpstreamCreate);
-      yield put(rtc.SfuLocalUpstreamOpenRequest(sfuLocalUpstreamCreate.payload.connectionId));
+      yield put(rtc.SfuLocalUpstreamOpenRequest({connectionId: sfuLocalUpstreamCreate.payload.connectionId}));
     }
   });
 
@@ -166,7 +166,7 @@ export function* rtcSaga(dispatch) {
     // (??? see above ^^^^^) If we have a remote media object for this sfu remote upstream connection, create an associated sfu downstream connection
     let mediaId = yield select((state: State) => selectRemoteMediaForSfu(state, action.payload));
     if (mediaId != null) {
-      yield put(rtc.SfuDownstreamCreate(dispatch, action.payload, mediaId));
+      yield put(rtc.SfuDownstreamCreate(dispatch, action.payload.connectionId, mediaId));
     }
   });
 
@@ -175,7 +175,7 @@ export function* rtcSaga(dispatch) {
     // connection to replace it
     let mediaId = yield select((state: State) => selectRemoteMediaForSfu(state, action.payload));
     yield take(getType(rtc.SfuRemoteUpstreamCreate));
-    yield put(rtc.SfuDownstreamCreate(dispatch, action.payload, mediaId));
+    yield put(rtc.SfuDownstreamCreate(dispatch, action.payload.connectionId, mediaId));
   })
 
   yield takeEvery(getType(rtc.SfuLocalUpstreamStatusChange), function*(action: ActionType<typeof rtc.SfuLocalUpstreamStatusChange>) {

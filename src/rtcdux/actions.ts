@@ -9,6 +9,8 @@ import {
   Sfu
 } from "./types";
 
+import * as rtc from './actions';
+
 import { Liveswitch, LiveswitchApi } from './liveswitch';
 
 const CONNECTION_STATES = {
@@ -27,10 +29,10 @@ export const ChannelJoinResolve = createAction('ChannelJoinResolve', (resolve) =
 
   // Handle actions dispatched from a remote client
   channel.addOnClientMessage((remoteClientInfo, message) => {
-    // let remoteAction = JSON.parse(message);
-    // let actionCreator = ActionCreator[remoteAction.actionCreator];
-    // let actionCreatorArgs = remoteAction.actionCreatorArgs;
-    // dispatch(actionCreator(...actionCreatorArgs));
+    let remoteAction = JSON.parse(message);
+    let actionCreator = rtc[remoteAction.actionCreator];
+    let actionCreatorArgs = remoteAction.actionCreatorArgs;
+    dispatch(actionCreator(...actionCreatorArgs));
   });
 
   // Create all existing remote clients
@@ -70,13 +72,13 @@ export const ChannelJoinResolve = createAction('ChannelJoinResolve', (resolve) =
 export const RemoteClientCreate = createAction('RemoteClientCreate', (resolve) => { return (remoteClientInfo: any) => {
   let remoteClientId = remoteClientInfo.getId() as string;
   Liveswitch.remoteClientList[remoteClientId] = remoteClientInfo;
-  return resolve(remoteClientId);
+  return resolve({remoteClientId});
 }});
 
 export const RemoteClientDestroy = createAction('RemoteClientDestroy', (resolve) => { return (remoteClientId: string) => {
   delete Liveswitch.remoteClientList[remoteClientId];
 
-  return resolve(remoteClientId);
+  return resolve({remoteClientId});
 }});
 
 export const RemoteMediaCreate = createAction('RemoteMediaCreate', (resolve) => { return (mediaId: string, name: string, remoteClientId: string, sfuConnectionId: string) => {
@@ -89,7 +91,7 @@ export const RemoteMediaCreate = createAction('RemoteMediaCreate', (resolve) => 
 export const RemoteMediaDestroy = createAction('RemoteMediaDestroy', (resolve) => { return (mediaId: string) => {
   delete Liveswitch.remoteMediaList[mediaId];
 
-  return resolve(mediaId);
+  return resolve({mediaId});
 }});
 
 export const SfuLocalUpstreamCreate = createAction('SfuLocalUpstreamCreate', (resolve) => { return (dispatch: any, mediaId: string) => {
@@ -98,7 +100,7 @@ export const SfuLocalUpstreamCreate = createAction('SfuLocalUpstreamCreate', (re
   let localvideoStream = new LiveswitchApi.VideoStream(localMedia, null); 
   let connection = Liveswitch.channel.createSfuUpstreamConnection(localAudioStream, localvideoStream);
 
-  let connectionId = connection.getId();
+  let connectionId = connection.getId() as string;
   Liveswitch.sfuLocalUpstreamList[connectionId] = {mediaId, connection};
 
   connection.setIceServers([new LiveswitchApi.IceServer("stun.l.google.com:19302")]);
@@ -112,20 +114,20 @@ export const SfuLocalUpstreamCreate = createAction('SfuLocalUpstreamCreate', (re
 export const SfuLocalUpstreamDestroy = createAction('SfuLocalUpstreamDestroy', (resolve) => { return (connectionId: string) => {
   delete Liveswitch.sfuLocalUpstreamList[connectionId];
 
-  return resolve(connectionId);
+  return resolve({connectionId});
 }});
 
 export const SfuRemoteUpstreamCreate = createAction('SfuRemoteUpstreamCreate', (resolve) => { return (remoteConnectionInfo: any) => {
   let connectionId = remoteConnectionInfo.getId() as string;
   Liveswitch.sfuRemoteUpstreamList[connectionId] = remoteConnectionInfo;
 
-  return resolve(connectionId);
+  return resolve({connectionId});
 }});
 
 export const SfuRemoteUpstreamDestroy = createAction('SfuRemoteUpstreamDestroy', (resolve) => { return (connectionId: string) => {
   delete Liveswitch.sfuRemoteUpstreamList[connectionId];
 
-  return resolve(connectionId);
+  return resolve({connectionId});
 }});
 
 export const SfuDownstreamCreate = createAction('SfuDownstreamCreate', (resolve) => { return (dispatch: any, connectionId: string, mediaId: string) => {
@@ -147,13 +149,13 @@ export const SfuDownstreamCreate = createAction('SfuDownstreamCreate', (resolve)
 export const SfuDownstreamDestroy = createAction('SfuDownstreamDestroy', (resolve) => { return (connectionId: string) => {
   delete Liveswitch.sfuDownstreamList[connectionId];
   
-  return resolve(connectionId);
+  return resolve({connectionId});
 }});
 
 export const ServerConnectRequest           = createStandardAction("ServerConnectRequest")<void>();
-export const ServerConnectResolve           = createStandardAction("ServerConnectResolve")<string /*localClientId*/>();
+export const ServerConnectResolve           = createStandardAction("ServerConnectResolve")<{localClientId: string}>();
 export const ServerConnectReject            = createStandardAction("ServerConnectReject")<void>();
-export const ChannelJoinRequest             = createStandardAction("ChannelJoinRequest")<string /*channelId*/>();
+export const ChannelJoinRequest             = createStandardAction("ChannelJoinRequest")<{channelId: string}>();
 export const ChannelJoinReject              = createStandardAction("ChannelJoinReject")<void>();
 export const ChannelLeaveRequest            = createStandardAction("ChannelLeaveRequest")<void>();
 export const ChannelLeaveResolve            = createStandardAction("ChannelLeaveResolve")<void>();
@@ -165,9 +167,9 @@ export const WebcamCaptureResolve = createAction('WebcamCaptureResolve', (resolv
 }});
 
 export const WebcamCaptureReject            = createStandardAction("WebcamCaptureReject")<void>();
-export const LocalMediaReleaseRequest       = createStandardAction("LocalMediaReleaseRequest")<string /*mediaId*/>();
-export const LocalMediaReleaseResolve       = createStandardAction("LocalMediaReleaseResolve")<string /*mediaId*/>();
-export const LocalMediaReleaseReject        = createStandardAction("LocalMediaReleaseReject")<string /*mediaId*/>();
+export const LocalMediaReleaseRequest       = createStandardAction("LocalMediaReleaseRequest")<{mediaId: string}>();
+export const LocalMediaReleaseResolve       = createStandardAction("LocalMediaReleaseResolve")<{mediaId: string}>();
+export const LocalMediaReleaseReject        = createStandardAction("LocalMediaReleaseReject")<{mediaId: string}>();
 
 export const RemoteMediaSfuUpdate = createAction('RemoteMediaSfuUpdate', (resolve) => { return (mediaId: string, connectionId: string) => {
   return resolve({mediaId, connectionId});
@@ -177,20 +179,20 @@ export const SfuLocalUpstreamStatusChange = createAction('SfuLocalUpstreamStatus
   return resolve({connectionId, status});
 }});
 
-export const SfuLocalUpstreamOpenRequest    = createStandardAction("SfuLocalUpstreamOpenRequest")<string /*connectionId*/>();
-export const SfuLocalUpstreamOpenResolve    = createStandardAction("SfuLocalUpstreamOpenResolve")<string /*connectionId*/>();
-export const SfuLocalUpstreamOpenReject     = createStandardAction("SfuLocalUpstreamOpenReject")<string /*connectionId*/>();
-export const SfuLocalUpstreamCloseRequest   = createStandardAction("SfuLocalUpstreamCloseRequest")<string /*connectionId*/>();
-export const SfuLocalUpstreamCloseResolve   = createStandardAction("SfuLocalUpstreamCloseResolve")<string /*connectionId*/>();
-export const SfuLocalUpstreamCloseReject    = createStandardAction("SfuLocalUpstreamCloseReject")<string /*connectionId*/>();
+export const SfuLocalUpstreamOpenRequest    = createStandardAction("SfuLocalUpstreamOpenRequest")<{connectionId: string}>();
+export const SfuLocalUpstreamOpenResolve    = createStandardAction("SfuLocalUpstreamOpenResolve")<{connectionId: string}>();
+export const SfuLocalUpstreamOpenReject     = createStandardAction("SfuLocalUpstreamOpenReject")<{connectionId: string}>();
+export const SfuLocalUpstreamCloseRequest   = createStandardAction("SfuLocalUpstreamCloseRequest")<{connectionId: string}>();
+export const SfuLocalUpstreamCloseResolve   = createStandardAction("SfuLocalUpstreamCloseResolve")<{connectionId: string}>();
+export const SfuLocalUpstreamCloseReject    = createStandardAction("SfuLocalUpstreamCloseReject")<{connectionId: string}>();
 
 export const SfuDownstreamStatusChange = createAction('SfuDownstreamStatusChange', (resolve) => { return (connectionId: string, status: string) => {
   return resolve({connectionId, status});
 }});
 
-export const SfuDownstreamOpenRequest       = createStandardAction("SfuDownstreamOpenRequest")<string /*connectionId*/>();
-export const SfuDownstreamOpenResolve       = createStandardAction("SfuDownstreamOpenResolve")<string /*connectionId*/>();
-export const SfuDownstreamOpenReject        = createStandardAction("SfuDownstreamOpenReject")<string /*connectionId*/>();
-export const SfuDownstreamCloseRequest      = createStandardAction("SfuDownstreamCloseRequest")<string /*connectionId*/>();
-export const SfuDownstreamCloseResolve      = createStandardAction("SfuDownstreamCloseResolve")<string /*connectionId*/>();
-export const SfuDownstreamCloseReject       = createStandardAction("SfuDownstreamCloseReject")<string /*connectionId*/>();
+export const SfuDownstreamOpenRequest       = createStandardAction("SfuDownstreamOpenRequest")<{connectionId: string}>();
+export const SfuDownstreamOpenResolve       = createStandardAction("SfuDownstreamOpenResolve")<{connectionId: string}>();
+export const SfuDownstreamOpenReject        = createStandardAction("SfuDownstreamOpenReject")<{connectionId: string}>();
+export const SfuDownstreamCloseRequest      = createStandardAction("SfuDownstreamCloseRequest")<{connectionId: string}>();
+export const SfuDownstreamCloseResolve      = createStandardAction("SfuDownstreamCloseResolve")<{connectionId: string}>();
+export const SfuDownstreamCloseReject       = createStandardAction("SfuDownstreamCloseReject")<{connectionId: string}>();

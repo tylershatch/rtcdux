@@ -1,5 +1,5 @@
 import { Liveswitch, LiveswitchApi } from './liveswitch';
-import { Promise } from 'es6-promise';
+// import { Promise } from 'es6-promise';
 
 function makePromise(requestCallback, resolveCallback) {
   return new Promise((resolve, reject) => {
