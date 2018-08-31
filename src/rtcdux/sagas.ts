@@ -58,15 +58,16 @@ export function* rtcSaga(dispatch: Dispatch) {
       let rejectActionCreator = (rtc as any)[effectName + "Reject"];
       
       try {
-        let params = getParamNames(resolveActionCreator);
-        let passDispatch = Object.values(params)[0] === "dispatch";
         // HACK typescript does not support variadic arguments i guess, so must
         // coerce 'call' to type 'any'
         let result = yield (call as any)(effect, ...effectParams);
+
+        let params = getParamNames(resolveActionCreator);
+        let passDispatch = Object.values(params)[0] === "dispatch";
         if (passDispatch) {
-          yield put(resolveActionCreator({dispatch, [params[1]]: result}));
+          yield put(resolveActionCreator(dispatch, result));
         } else {
-          yield put(resolveActionCreator({[params[0]]: result}));
+          yield put(resolveActionCreator(result));
         }
       } catch (error) {
         console.log({action, error});
@@ -83,7 +84,7 @@ export function* rtcSaga(dispatch: Dispatch) {
       // Create and open an upstream sfu connection for this local media object
       let sfuLocalUpstreamCreate = rtc.SfuLocalUpstreamCreate(dispatch, mediaId);
       yield put(sfuLocalUpstreamCreate);
-      yield put(rtc.SfuLocalUpstreamOpenRequest({connectionId: sfuLocalUpstreamCreate.payload.connectionId}));
+      yield put(rtc.SfuLocalUpstreamOpenRequest(sfuLocalUpstreamCreate.payload.connectionId));
     }
   });
 
@@ -135,7 +136,7 @@ export function* rtcSaga(dispatch: Dispatch) {
       // Create and open an sfu upstream connection for this local media object
       let sfuLocalUpstreamCreate = rtc.SfuLocalUpstreamCreate(dispatch, action.payload.mediaId);
       yield put(sfuLocalUpstreamCreate);
-      yield put(rtc.SfuLocalUpstreamOpenRequest({connectionId: sfuLocalUpstreamCreate.payload.connectionId}));
+      yield put(rtc.SfuLocalUpstreamOpenRequest(sfuLocalUpstreamCreate.payload.connectionId));
     }
   });
 

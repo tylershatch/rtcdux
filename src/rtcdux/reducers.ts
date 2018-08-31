@@ -48,9 +48,9 @@ function channelStatus(state: string = 'LEFT', action: RtcAction) {
   }
 }
 
-function remoteClientList(state: ReadonlySet<string> = new Set(), action: RtcAction) {
+function remoteClientList(state: ReadonlyMap<string, string> = new Map(), action: RtcAction) {
   switch(action.type) {
-    case getType(rtc.RemoteClientCreate):                  return [...state, action.payload.remoteClientId];
+    case getType(rtc.RemoteClientCreate):                  return {...state, [action.payload.remoteClientId]: action.payload.remoteClientId};
     case getType(rtc.RemoteClientDestroy):                 return omit(state, action.payload.remoteClientId);
     default: return state;
   }
@@ -58,7 +58,7 @@ function remoteClientList(state: ReadonlySet<string> = new Set(), action: RtcAct
 
 function localMediaList(state: ReadonlyMap<string, LocalMedia> = new Map(), action: RtcAction) {
   switch(action.type) {
-    case getType(rtc.WebcamCaptureResolve):               return {...state, [action.payload.mediaId]: action.payload};
+    case getType(rtc.WebcamCaptureResolve):               return {...state, [action.payload.mediaId]: action.payload.mediaId};
     case getType(rtc.LocalMediaReleaseResolve):           return omit(state, action.payload.mediaId);
     default: return state;
   }
@@ -82,10 +82,10 @@ function sfuLocalUpstreamList(state: ReadonlyMap<string, Sfu> = new Map(), actio
   }
 }
 
-function sfuRemoteUpstreamList(state: ReadonlySet<string> = new Set(), action: RtcAction) {
+function sfuRemoteUpstreamList(state: ReadonlyMap<string, string> = new Map(), action: RtcAction) {
   switch(action.type) {
-    case getType(rtc.SfuRemoteUpstreamCreate):          return [...state, action.payload];
-    case getType(rtc.SfuRemoteUpstreamDestroy):         return omit(state, action.payload);
+    case getType(rtc.SfuRemoteUpstreamCreate):          return {...state, [action.payload.connectionId]: action.payload.connectionId};
+    case getType(rtc.SfuRemoteUpstreamDestroy):         return omit(state, action.payload.connectionId);
     default: return state;
   }
 }

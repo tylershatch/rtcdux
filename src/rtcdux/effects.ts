@@ -1,4 +1,4 @@
-import { fm } from './frozen-mountain';
+require("./fm.liveswitch.js");
 
 import { Liveswitch } from "./actions";
 
