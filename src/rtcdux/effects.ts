@@ -1,6 +1,7 @@
+/// <reference path="./fm.liveswitch.d.ts" />
 require("./fm.liveswitch.js");
 
-import { Liveswitch } from "./actions";
+import * as rtc from "./rtc";
 
 function makePromise(requestCallback: any, resolveCallback: any) {
   return new Promise((resolve, reject) => {
@@ -16,66 +17,66 @@ let g_appId = "my-app2";
 
 export const Effect = {
 
+  DispatchToRemoteClient: function(remoteClientId: string, actionCreator: any, ...actionCreatorArgs: any[]) {
+    rtc.internal.channel.sendClientMessage(
+      rtc.internal.remoteClientList[remoteClientId].getUserId(), 
+      rtc.internal.remoteClientList[remoteClientId].getDeviceId(), 
+      remoteClientId, 
+      JSON.stringify({
+        actionCreator,
+        actionCreatorArgs
+      })
+    );
+  },
+
   ServerConnect: function() {
     fm.liveswitch.Plugin.setChromeExtensionId('minnnhgjfmbfkdficcmlgoecchcbgnac');
   
     fm.liveswitch.Log.setLogLevel(fm.liveswitch.LogLevel.Debug);
     fm.liveswitch.Log.registerProvider(new fm.liveswitch.ConsoleLogProvider(fm.liveswitch.LogLevel.Debug));
   
-    Liveswitch.localClient = new fm.liveswitch.Client("https://liveswitch.spatial.is:8443/sync", g_appId, "my-name4", "00000000-0000-0000-000000000000", null, ["role1", "role2"]);
+    rtc.internal.localClient = new fm.liveswitch.Client("https://liveswitch.spatial.is:8443/sync", g_appId, "my-name4", "00000000-0000-0000-000000000000", null, ["role1", "role2"]);
 
     let registerToken = fm.liveswitch.Token.generateClientRegisterToken(
       g_appId,
-      Liveswitch.localClient.getUserId(),
-      Liveswitch.localClient.getDeviceId(),
-      Liveswitch.localClient.getId(),
-      Liveswitch.localClient.getRoles(),
+      rtc.internal.localClient.getUserId(),
+      rtc.internal.localClient.getDeviceId(),
+      rtc.internal.localClient.getId(),
+      rtc.internal.localClient.getRoles(),
       null,
       "--replaceThisWithYourOwnSharedSecret--"
     );
 
     return makePromise(
-      () => Liveswitch.localClient.register(registerToken),
-      () => Liveswitch.localClient.getId()
+      () => rtc.internal.localClient.register(registerToken),
+      () => rtc.internal.localClient.getId()
     );
   },
   
-  ChannelJoin: function(channelId: string) {
-    if (channelId === "") {
+  ChannelJoin: function(payload : {channelId: string}) {
+    if (payload.channelId === "") {
       throw new Error("Can't join channel with empty ('') channelId");
     }
 
     let joinToken = fm.liveswitch.Token.generateClientJoinToken(
       g_appId,
-      Liveswitch.localClient.getUserId(),
-      Liveswitch.localClient.getDeviceId(),
-      Liveswitch.localClient.getId(),
-      new fm.liveswitch.ChannelClaim(channelId),
+      rtc.internal.localClient.getUserId(),
+      rtc.internal.localClient.getDeviceId(),
+      rtc.internal.localClient.getId(),
+      new fm.liveswitch.ChannelClaim(payload.channelId),
       "--replaceThisWithYourOwnSharedSecret--"
     );
       
     return makePromise(
-      () => Liveswitch.localClient.join(channelId, joinToken), 
+      () => rtc.internal.localClient.join(payload.channelId, joinToken), 
       (channel: fm.liveswitch.Channel) => channel
     );
   },
   
   ChannelLeave: function() {
     return makePromise(
-      () => Liveswitch.localClient.leave(Liveswitch.channel.getId()), 
+      () => rtc.internal.localClient.leave(rtc.internal.channel.getId()), 
       () => {}
-    );
-  },
-  
-  DispatchToRemoteClient: function(remoteClientId: string, actionCreator: any, ...actionCreatorArgs: any[]) {
-    Liveswitch.channel.sendClientMessage(
-      Liveswitch.remoteClientList[remoteClientId].getUserId(), 
-      Liveswitch.remoteClientList[remoteClientId].getDeviceId(), 
-      remoteClientId, 
-      JSON.stringify({
-        actionCreator,
-        actionCreatorArgs
-      })
     );
   },
   
@@ -86,47 +87,47 @@ export const Effect = {
     return makePromise(
       () => localMedia.start(), 
       () => {
-        Liveswitch.localMediaList[mediaId] = localMedia;
+        rtc.internal.localMediaList[mediaId] = localMedia;
         return mediaId;
       }
     );
   },
   
-  LocalMediaRelease: function(mediaId: string) {
+  LocalMediaRelease: function(payload: {mediaId: string}) {
     return makePromise(
-      () => Liveswitch.localMediaList[mediaId].stop(),
+      () => rtc.internal.localMediaList[payload.mediaId].stop(),
       () => {
-        delete Liveswitch.localMediaList[mediaId];
-        return mediaId;
+        delete rtc.internal.localMediaList[payload.mediaId];
+        return payload.mediaId;
       }
     );
   },
   
-  SfuLocalUpstreamOpen: function(connectionId: string) {
+  SfuLocalUpstreamOpen: function(payload: {connectionId: string}) {
     return makePromise(
-      () => Liveswitch.sfuLocalUpstreamList[connectionId].connection.open(),
-      () => connectionId
+      () => rtc.internal.sfuLocalUpstreamList[payload.connectionId].connection.open(),
+      () => payload.connectionId
     );
   },
   
-  SfuLocalUpstreamClose: function(connectionId: string) {  
+  SfuLocalUpstreamClose: function(payload: {connectionId: string}) {  
     return makePromise(
-      () => Liveswitch.sfuLocalUpstreamList[connectionId].connection.close(),
-      () => connectionId
+      () => rtc.internal.sfuLocalUpstreamList[payload.connectionId].connection.close(),
+      () => payload.connectionId
     );
   },
   
-  SfuDownstreamOpen: function(connectionId: string) {
+  SfuDownstreamOpen: function(payload: {connectionId: string}) {
     return makePromise(
-      () => Liveswitch.sfuDownstreamList[connectionId].connection.open(),
-      () => connectionId
+      () => rtc.internal.sfuDownstreamList[payload.connectionId].connection.open(),
+      () => payload.connectionId
     );
   },
   
-  SfuDownstreamClose: function(connectionId: string) {
+  SfuDownstreamClose: function(payload: {connectionId: string}) {
     return makePromise(
-      () => Liveswitch.sfuDownstreamList[connectionId].connection.close(),
-      () => connectionId
+      () => rtc.internal.sfuDownstreamList[payload.connectionId].connection.close(),
+      () => payload.connectionId
     );
   }
 }

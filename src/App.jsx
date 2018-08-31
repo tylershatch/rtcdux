@@ -7,8 +7,8 @@ import {
   FormControl
 } from 'react-bootstrap';
 
-import * as rtc from './rtcdux/actions';
-import { Liveswitch } from './rtcdux/actions';
+import * as rtc from './rtcdux/rtc';
+import * as ActionCreator from './rtcdux/action-creators';
 
 const LocalMedia = (props) => {
   let mediaId = props.mediaId;
@@ -19,7 +19,7 @@ const LocalMedia = (props) => {
       <button onClick={() => props.releaseLocalMedia(mediaId)}>X</button>
       <video autoPlay ref={(video) => {
         if (video !== null) {
-          video.srcObject = Liveswitch.getLocalVideoStream(mediaId);
+          video.srcObject = rtc.getLocalVideoStream(mediaId);
         }
       }}/>
     </div>
@@ -39,7 +39,7 @@ const RemoteMedia = (props) => {
         ref = {
           (video) => {
             if (props.open && video !== null) {
-              video.srcObject = Liveswitch.getRemoteVideoStream(mediaId);
+              video.srcObject = rtc.getRemoteVideoStream(mediaId);
             }
           }
         }
@@ -164,31 +164,31 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     connectToServer: () => {
-      dispatch(rtc.ServerConnectRequest());
+      dispatch(ActionCreator.ServerConnectRequest());
     },
 
     joinChannel: (channelId) => {
-      dispatch(rtc.ChannelJoinRequest(channelId));
+      dispatch(ActionCreator.ChannelJoinRequest(channelId));
     },
 
     leaveChannel: () => {
-      dispatch(rtc.ChannelLeaveRequest());
+      dispatch(ActionCreator.ChannelLeaveRequest());
     },
 
     captureWebcam: () => {
-      dispatch(rtc.WebcamCaptureRequest());
+      dispatch(ActionCreator.WebcamCaptureRequest());
     },
 
     releaseLocalMedia: (mediaId) => {
-      dispatch(rtc.LocalMediaReleaseRequest(mediaId));
+      dispatch(ActionCreator.LocalMediaReleaseRequest(mediaId));
     },
     
     openSfuDownstream: (connectionId) => {
-      dispatch(rtc.SfuDownstreamOpenRequest(connectionId));
+      dispatch(ActionCreator.SfuDownstreamOpenRequest(connectionId));
     },
 
     closeSfuDownstream: (connectionId) => {
-      dispatch(rtc.SfuDownstreamCloseRequest(connectionId));
+      dispatch(ActionCreator.SfuDownstreamCloseRequest(connectionId));
     }
   }
 }

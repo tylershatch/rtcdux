@@ -1,107 +1,120 @@
-import { combineReducers } from "redux";
+import { combineReducers, Action, Reducer } from "redux";
 import { omit } from "lodash";
 
-import { 
-  ActionType, 
-  getType,
-  StateType
-} from "typesafe-actions"
+import { RtcActions } from "./action-types"
 
-import * as rtc from "./actions"
-type RtcAction = ActionType<typeof rtc>;
-
-export type LocalMedia = {
-  readonly mediaId: string;
-  readonly name: string;
-  readonly sfuConnectionId: string;
+interface LocalMedia {
+  mediaId: string;
+  name: string;
+  sfuConnectionId: string;
 };
 
-export type RemoteMedia = {
-  readonly mediaId: string;
-  readonly name: string;
-  readonly remoteClientId: string;
-  readonly sfuConnectionId: string; 
+interface RemoteMedia {
+  mediaId: string;
+  name: string;
+  remoteClientId: string;
+  sfuConnectionId: string; 
 };
 
-export type Sfu = {
-  readonly connectionId: string;
-  readonly status: string;
-  readonly mediaId: string;
+interface Sfu {
+  connectionId: string;
+  status: string;
+  mediaId: string;
 };
 
-function localClientId(state: string = null, action: RtcAction) {
+interface RemoteClientList {[index:string] : string};
+interface LocalMediaList {[index:string] : LocalMedia};
+interface RemoteMediaList {[index:string] : RemoteMedia};
+interface SfuLocalUpstreamList {[index:string] : Sfu};
+interface SfuRemoteUpstreamList {[index:string] : string};
+interface SfuDownstreamList {[index:string] : Sfu};
+
+export interface RtcState {
+  localClientId: string,
+  channelStatus: string,
+  remoteClientList: RemoteClientList,
+  localMediaList: LocalMediaList,
+  remoteMediaList: RemoteMediaList,
+  sfuLocalUpstreamList: SfuLocalUpstreamList,
+  sfuRemoteUpstreamList: SfuRemoteUpstreamList,
+  sfuDownstreamList: SfuDownstreamList
+}
+
+const localClientId: Reducer<string> = (localClientId: string = null, action: RtcActions.Base) => {
+  let thing: RtcActions.ServerConnectResolve = null;
+
   switch(action.type) {
-    case getType(rtc.ServerConnectResolve):              return action.payload.localClientId;
+    case "ServerConnectResolve":              return action.payload.localClientId;
+    default: return localClientId;
+  }
+}
+
+const channelStatus: Reducer<string> = (state: string = 'LEFT', action: RtcActions.Base) => {
+  switch(action.type) {
+    case "ChannelJoinRequest":                return 'JOINING';
+    case "ChannelJoinResolve":                return 'JOINED';
+    case "ChannelJoinReject":                 return 'LEFT';
+    case "ChannelLeaveRequest":               return 'LEAVING';
+    case "ChannelLeaveResolve":               return 'LEFT';
+    case "ChannelLeaveReject":                return 'JOINED';
     default: return state;
   }
 }
 
-function channelStatus(state: string = 'LEFT', action: RtcAction) {
+const remoteClientList: Reducer<RemoteClientList> = (remoteClientList = {}, action: RtcActions.Base) => {
   switch(action.type) {
-    case getType(rtc.ChannelJoinRequest):                return 'JOINING';
-    case getType(rtc.ChannelJoinResolve):                return 'JOINED';
-    case getType(rtc.ChannelJoinReject):                 return 'LEFT';
-    case getType(rtc.ChannelLeaveRequest):               return 'LEAVING';
-    case getType(rtc.ChannelLeaveResolve):               return 'LEFT';
-    case getType(rtc.ChannelLeaveReject):                return 'JOINED';
-    default: return state;
+    case "RemoteClientCreate":                  return {...remoteClientList, [action.payload.remoteClientId]: action.payload.remoteClientId};
+    case "RemoteClientDestroy":                 return omit(remoteClientList, action.payload.remoteClientId);
+    default: return remoteClientList;
   }
 }
 
-function remoteClientList(state: ReadonlyMap<string, string> = new Map(), action: RtcAction) {
+const localMediaList: Reducer<LocalMediaList> = (localMediaList = {}, action: RtcActions.Base) => {
   switch(action.type) {
-    case getType(rtc.RemoteClientCreate):                  return {...state, [action.payload.remoteClientId]: action.payload.remoteClientId};
-    case getType(rtc.RemoteClientDestroy):                 return omit(state, action.payload.remoteClientId);
-    default: return state;
+    case "WebcamCaptureResolve":               return {...localMediaList, [action.payload.mediaId]: {...action.payload, sfuConnectionId: null}};
+    case "LocalMediaReleaseResolve":           return omit(localMediaList, action.payload.mediaId);
+    default: return localMediaList;
   }
 }
 
-function localMediaList(state: ReadonlyMap<string, LocalMedia> = new Map(), action: RtcAction) {
+const remoteMediaList: Reducer<RemoteMediaList> = (remoteMediaList = {}, action: RtcActions.Base) => {
   switch(action.type) {
-    case getType(rtc.WebcamCaptureResolve):               return {...state, [action.payload.mediaId]: action.payload.mediaId};
-    case getType(rtc.LocalMediaReleaseResolve):           return omit(state, action.payload.mediaId);
-    default: return state;
+    case "RemoteMediaCreate":                 return {...remoteMediaList, [action.payload.mediaId]: {...action.payload, sfuConnectionId: null}};
+    case "RemoteMediaDestroy":                return omit(remoteMediaList, action.payload.mediaId);
+    case "RemoteMediaSfuUpdate":              return {...remoteMediaList, [action.payload.mediaId]: {...remoteMediaList[action.payload.mediaId], sfuConnectionId: action.payload.connectionId}};
+    default: return remoteMediaList;
   }
 }
 
-function remoteMediaList(state: ReadonlyMap<string, RemoteMedia> = new Map(), action: RtcAction) {
+const sfuLocalUpstreamList: Reducer<SfuLocalUpstreamList> = (sfuLocalUpstreamList = {}, action: RtcActions.Base) => {
   switch(action.type) {
-    case getType(rtc.RemoteMediaCreate):                 return {...state, [action.payload.mediaId]: action.payload};
-    case getType(rtc.RemoteMediaDestroy):                return omit(state, action.payload);
-    case getType(rtc.RemoteMediaSfuUpdate):              return {...state, [action.payload.mediaId]: {...(state as any)[action.payload.mediaId], sfuConnectionId: action.payload.connectionId}};
-    default: return state;
+    case "SfuLocalUpstreamCreate":           return {...sfuLocalUpstreamList, [action.payload.connectionId]: {...action.payload, status: "NEW"}};
+    case "SfuLocalUpstreamDestroy":          return omit(sfuLocalUpstreamList, action.payload.connectionId);
+    case "SfuLocalUpstreamStatusChange":     return {...sfuLocalUpstreamList, [action.payload.connectionId]: {...sfuLocalUpstreamList[action.payload.connectionId], status: action.payload.status}};
+    default: return sfuLocalUpstreamList;
   }
 }
 
-function sfuLocalUpstreamList(state: ReadonlyMap<string, Sfu> = new Map(), action: RtcAction) {
+const sfuRemoteUpstreamList: Reducer<SfuRemoteUpstreamList> = (sfuRemoteUpstreamList = {}, action: RtcActions.Base) => {
   switch(action.type) {
-    case getType(rtc.SfuLocalUpstreamCreate):           return {...state, [action.payload.connectionId]: action.payload};
-    case getType(rtc.SfuLocalUpstreamDestroy):          return omit(state, action.payload);
-    case getType(rtc.SfuLocalUpstreamStatusChange):     return {...state, [action.payload.connectionId]: {...(state as any)[action.payload.connectionId], status: action.payload.status}};
-    default: return state;
+    case "SfuRemoteUpstreamCreate":          return {...sfuRemoteUpstreamList, [action.payload.connectionId]: action.payload.connectionId};
+    case "SfuRemoteUpstreamDestroy":         return omit(sfuRemoteUpstreamList, action.payload.connectionId);
+    default: return sfuRemoteUpstreamList;
   }
 }
 
-function sfuRemoteUpstreamList(state: ReadonlyMap<string, string> = new Map(), action: RtcAction) {
+const sfuDownstreamList: Reducer<SfuDownstreamList> = (sfuDownstreamList = {}, action: RtcActions.Base) => {
   switch(action.type) {
-    case getType(rtc.SfuRemoteUpstreamCreate):          return {...state, [action.payload.connectionId]: action.payload.connectionId};
-    case getType(rtc.SfuRemoteUpstreamDestroy):         return omit(state, action.payload.connectionId);
-    default: return state;
+    case "SfuDownstreamCreate":               return {...sfuDownstreamList, [action.payload.connectionId]: {...action.payload, status: "NEW"}};
+    case "SfuDownstreamDestroy":              return omit(sfuDownstreamList, action.payload.connectionId);
+    case "SfuDownstreamStatusChange":        return {...sfuDownstreamList, [action.payload.connectionId]: {...sfuDownstreamList[action.payload.connectionId], status: action.payload.status}};
+    default: return sfuDownstreamList;
   }
 }
 
-function sfuDownstreamList(state: ReadonlyMap<string, Sfu> = new Map(), action: RtcAction) {
-  switch(action.type) {
-    case getType(rtc.SfuDownstreamCreate):               return {...state, [action.payload.connectionId]: action.payload};
-    case getType(rtc.SfuDownstreamDestroy):              return omit(state, action.payload);
-    case getType(rtc.SfuDownstreamStatusChange):        return {...state, [action.payload.connectionId]: {...(state as any)[action.payload.connectionId], status: action.payload.status}};
-    default: return state;
-  }
-}
-
-export const rtcReducer = combineReducers({
-  channelStatus,
+export const rtcReducer: Reducer<RtcState> = combineReducers<RtcState>({
   localClientId,
+  channelStatus,
   remoteClientList,
   localMediaList,
   remoteMediaList,
@@ -109,35 +122,3 @@ export const rtcReducer = combineReducers({
   sfuRemoteUpstreamList,
   sfuDownstreamList
 });
-
-export type State = StateType<typeof rtcReducer>
-
-// function validAction(state, action) {
-//   switch (action.type) {
-//     case ActionType.ChannelJoinRequest:
-//       return state.channelStatus == 'LEFT';
-//     case ActionType.ChannelLeaveRequest:
-//       return state.channelStatus == 'JOINED';
-//     case ActionType.LocalMediaReleaseRequest:
-//       return action.mediaId in state.localMediaList;
-//     case ActionType.SfuLocalUpstreamOpenRequest:
-//       return action.connectionId in state.sfuLocalUpstreamList && state.sfuLocalUpstreamList[action.connectionId].status == 'NEW';
-//     case ActionType.SfuLocalUpstreamCloseRequest:
-//       return action.connectionId in state.sfuLocalUpstreamList && state.sfuLocalUpstreamList[action.connectionId].status == 'OPEN';
-//     case ActionType.SfuDownstreamOpenRequest:
-//       return action.connectionId in state.sfuDownstreamList && sfuDownstreamList[action.connectionId].status == 'NEW';
-//     case ActionType.SfuDownstreamCloseRequest:
-//       return action.connectionId in state.sfuDownstreamList && sfuDownstreamList[action.connectionId].status == 'OPEN';
-
-//     default: return true;
-//   }
-// }
-
-// export function rtcReducer(state, action) {
-//   if (state != undefined && !validAction(state, action)) {
-//     console.log(["Rejected invalid redux action", action, state]);
-//     return state;
-//   } else {
-//     return combinedReducers(state, action);
-//   }
-// }
