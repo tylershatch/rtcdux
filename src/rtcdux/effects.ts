@@ -1,11 +1,12 @@
-import { Liveswitch, LiveswitchApi } from './liveswitch';
-// import { Promise } from 'es6-promise';
+import { fm } from './frozen-mountain';
 
-function makePromise(requestCallback, resolveCallback) {
+import { Liveswitch } from "./actions";
+
+function makePromise(requestCallback: any, resolveCallback: any) {
   return new Promise((resolve, reject) => {
-    requestCallback().then((result) => {
+    requestCallback().then((result: any) => {
       resolve(resolveCallback(result));
-    }).fail((error) => {
+    }).fail((error: any) => {
       reject(error);
     });
   });
@@ -16,14 +17,14 @@ let g_appId = "my-app2";
 export const Effect = {
 
   ServerConnect: function() {
-    LiveswitchApi.Plugin.setChromeExtensionId('minnnhgjfmbfkdficcmlgoecchcbgnac');
+    fm.liveswitch.Plugin.setChromeExtensionId('minnnhgjfmbfkdficcmlgoecchcbgnac');
   
-    LiveswitchApi.Log.setLogLevel(LiveswitchApi.LogLevel.Debug);
-    LiveswitchApi.Log.registerProvider(new LiveswitchApi.ConsoleLogProvider(LiveswitchApi.LogLevel.Debug));
+    fm.liveswitch.Log.setLogLevel(fm.liveswitch.LogLevel.Debug);
+    fm.liveswitch.Log.registerProvider(new fm.liveswitch.ConsoleLogProvider(fm.liveswitch.LogLevel.Debug));
   
-    Liveswitch.localClient = new LiveswitchApi.Client("https://liveswitch.spatial.is:8443/sync", g_appId, "my-name4", "00000000-0000-0000-000000000000", null, ["role1", "role2"]);
+    Liveswitch.localClient = new fm.liveswitch.Client("https://liveswitch.spatial.is:8443/sync", g_appId, "my-name4", "00000000-0000-0000-000000000000", null, ["role1", "role2"]);
 
-    let registerToken = LiveswitchApi.Token.generateClientRegisterToken(
+    let registerToken = fm.liveswitch.Token.generateClientRegisterToken(
       g_appId,
       Liveswitch.localClient.getUserId(),
       Liveswitch.localClient.getDeviceId(),
@@ -39,23 +40,23 @@ export const Effect = {
     );
   },
   
-  ChannelJoin: function(channelId) {
+  ChannelJoin: function(channelId: string) {
     if (channelId === "") {
       throw new Error("Can't join channel with empty ('') channelId");
     }
 
-    let joinToken = LiveswitchApi.Token.generateClientJoinToken(
+    let joinToken = fm.liveswitch.Token.generateClientJoinToken(
       g_appId,
       Liveswitch.localClient.getUserId(),
       Liveswitch.localClient.getDeviceId(),
       Liveswitch.localClient.getId(),
-      new LiveswitchApi.ChannelClaim(channelId),
+      new fm.liveswitch.ChannelClaim(channelId),
       "--replaceThisWithYourOwnSharedSecret--"
     );
       
     return makePromise(
       () => Liveswitch.localClient.join(channelId, joinToken), 
-      (channel) => channel
+      (channel: fm.liveswitch.Channel) => channel
     );
   },
   
@@ -66,7 +67,7 @@ export const Effect = {
     );
   },
   
-  DispatchToRemoteClient: function(remoteClientId, actionCreator, ...actionCreatorArgs) {
+  DispatchToRemoteClient: function(remoteClientId: string, actionCreator: any, ...actionCreatorArgs: any[]) {
     Liveswitch.channel.sendClientMessage(
       Liveswitch.remoteClientList[remoteClientId].getUserId(), 
       Liveswitch.remoteClientList[remoteClientId].getDeviceId(), 
@@ -79,7 +80,7 @@ export const Effect = {
   },
   
   WebcamCapture: function() {
-    var localMedia = new LiveswitchApi.LocalMedia(true, true);
+    var localMedia = new fm.liveswitch.LocalMedia(true, true);
     var mediaId = localMedia.getId();
 
     return makePromise(
@@ -91,7 +92,7 @@ export const Effect = {
     );
   },
   
-  LocalMediaRelease: function(mediaId) {
+  LocalMediaRelease: function(mediaId: string) {
     return makePromise(
       () => Liveswitch.localMediaList[mediaId].stop(),
       () => {
@@ -101,28 +102,28 @@ export const Effect = {
     );
   },
   
-  SfuLocalUpstreamOpen: function(connectionId) {
+  SfuLocalUpstreamOpen: function(connectionId: string) {
     return makePromise(
       () => Liveswitch.sfuLocalUpstreamList[connectionId].connection.open(),
       () => connectionId
     );
   },
   
-  SfuLocalUpstreamClose: function(connectionId) {  
+  SfuLocalUpstreamClose: function(connectionId: string) {  
     return makePromise(
       () => Liveswitch.sfuLocalUpstreamList[connectionId].connection.close(),
       () => connectionId
     );
   },
   
-  SfuDownstreamOpen: function(connectionId) {
+  SfuDownstreamOpen: function(connectionId: string) {
     return makePromise(
       () => Liveswitch.sfuDownstreamList[connectionId].connection.open(),
       () => connectionId
     );
   },
   
-  SfuDownstreamClose: function(connectionId) {
+  SfuDownstreamClose: function(connectionId: string) {
     return makePromise(
       () => Liveswitch.sfuDownstreamList[connectionId].connection.close(),
       () => connectionId

@@ -8,7 +8,7 @@ import {
 } from 'react-bootstrap';
 
 import * as rtc from './rtcdux/actions';
-import { Liveswitch } from './rtcdux/liveswitch';
+import { Liveswitch } from './rtcdux/actions';
 
 const LocalMedia = (props) => {
   let mediaId = props.mediaId;

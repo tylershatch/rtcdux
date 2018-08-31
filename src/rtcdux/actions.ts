@@ -1,36 +1,64 @@
+import { fm } from './frozen-mountain';
+
+import { Dispatch } from 'redux';
+
 import { 
   createAction,
   createStandardAction 
 } from "typesafe-actions";
 
 import {
-  LocalMedia,
   RemoteMedia,
   Sfu
-} from "./types";
+} from "./reducers";
 
 import * as rtc from './actions';
 
-import { Liveswitch, LiveswitchApi } from './liveswitch';
+export const Liveswitch = {
+  localClient: null as fm.liveswitch.Client,
+  channel: null as fm.liveswitch.Channel,
+  remoteClientList: {} as {[index:string] : fm.liveswitch.ClientInfo},
+  localMediaList: {} as {[index:string] : fm.liveswitch.LocalMedia},
+  remoteMediaList: {} as {[index:string] : fm.liveswitch.RemoteMedia},
+  sfuRemoteUpstreamList: {} as {[index:string] : fm.liveswitch.ConnectionInfo},
+  
+  sfuLocalUpstreamList: {} as {
+    [index:string] : {
+      connection: fm.liveswitch.SfuUpstreamConnection; 
+      mediaId: string;
+    }
+  },
 
-const CONNECTION_STATES = {
-  [LiveswitchApi.ConnectionState.New]:           'NEW',
-  [LiveswitchApi.ConnectionState.Initializing]:  'INITIALIZING',
-  [LiveswitchApi.ConnectionState.Connecting]:    'CONNECTING',
-  [LiveswitchApi.ConnectionState.Connected]:     'CONNECTED',
-  [LiveswitchApi.ConnectionState.Closing]:       'CLOSING',
-  [LiveswitchApi.ConnectionState.Closed]:        'CLOSED',
-  [LiveswitchApi.ConnectionState.Failing]:       'FAILING',
-  [LiveswitchApi.ConnectionState.Failed]:        'FAILED',
+  sfuDownstreamList: {} as {
+    [index:string] : {
+      connection: fm.liveswitch.SfuDownstreamConnection; 
+      mediaId: string;
+    }
+  },
+  
+  // _getInternal is not an exposed typescript method of fm.liveswitch, so we must strip the type with 'as any'
+  getLocalVideoStream: (mediaId: string) => (Liveswitch.localMediaList[mediaId] as any)._getInternal()._videoMediaStream,
+  getRemoteVideoStream: (mediaId: string) => (Liveswitch.remoteMediaList[mediaId] as any)._getInternal()._videoMediaStream,
 }
 
-export const ChannelJoinResolve = createAction('ChannelJoinResolve', (resolve) => { return (dispatch: any, channel: any) => {
+const CONNECTION_STATES = {
+  [fm.liveswitch.ConnectionState.New]:           'NEW',
+  [fm.liveswitch.ConnectionState.Initializing]:  'INITIALIZING',
+  [fm.liveswitch.ConnectionState.Connecting]:    'CONNECTING',
+  [fm.liveswitch.ConnectionState.Connected]:     'CONNECTED',
+  [fm.liveswitch.ConnectionState.Closing]:       'CLOSING',
+  [fm.liveswitch.ConnectionState.Closed]:        'CLOSED',
+  [fm.liveswitch.ConnectionState.Failing]:       'FAILING',
+  [fm.liveswitch.ConnectionState.Failed]:        'FAILED',
+}
+
+export const ChannelJoinResolve = createAction('ChannelJoinResolve', (resolve: any) => { return (dispatch: Dispatch, channel: fm.liveswitch.Channel) => {
   Liveswitch.channel = channel;
 
   // Handle actions dispatched from a remote client
-  channel.addOnClientMessage((remoteClientInfo, message) => {
+  channel.addOnClientMessage((remoteClientInfo: fm.liveswitch.ClientInfo, message: string) => {
     let remoteAction = JSON.parse(message);
-    let actionCreator = rtc[remoteAction.actionCreator];
+    let actionCreator = (rtc as any)[remoteAction.actionCreator];
     let actionCreatorArgs = remoteAction.actionCreatorArgs;
     dispatch(actionCreator(...actionCreatorArgs));
   });
@@ -82,7 +110,7 @@ export const RemoteClientDestroy = createAction('RemoteClientDestroy', (resolve)
 }});
 
 export const RemoteMediaCreate = createAction('RemoteMediaCreate', (resolve) => { return (mediaId: string, name: string, remoteClientId: string, sfuConnectionId: string) => {
-  let remoteMedia = new LiveswitchApi.RemoteMedia();
+  let remoteMedia = new fm.liveswitch.RemoteMedia();
   Liveswitch.remoteMediaList[mediaId] = remoteMedia;
 
   return resolve({mediaId, name, remoteClientId, sfuConnectionId} as RemoteMedia);
@@ -94,16 +122,16 @@ export const RemoteMediaDestroy = createAction('RemoteMediaDestroy', (resolve) =
   return resolve({mediaId});
 }});
 
-export const SfuLocalUpstreamCreate = createAction('SfuLocalUpstreamCreate', (resolve) => { return (dispatch: any, mediaId: string) => {
+export const SfuLocalUpstreamCreate = createAction('SfuLocalUpstreamCreate', (resolve) => { return (dispatch: Dispatch, mediaId: string) => {
   let localMedia = Liveswitch.localMediaList[mediaId];
-  let localAudioStream = new LiveswitchApi.AudioStream(localMedia, null);
-  let localvideoStream = new LiveswitchApi.VideoStream(localMedia, null); 
+  let localAudioStream = new fm.liveswitch.AudioStream(localMedia, null);
+  let localvideoStream = new fm.liveswitch.VideoStream(localMedia, null); 
   let connection = Liveswitch.channel.createSfuUpstreamConnection(localAudioStream, localvideoStream);
 
   let connectionId = connection.getId() as string;
   Liveswitch.sfuLocalUpstreamList[connectionId] = {mediaId, connection};
 
-  connection.setIceServers([new LiveswitchApi.IceServer("stun.l.google.com:19302")]);
+  connection.setIceServers([new fm.liveswitch.IceServer("stun.l.google.com:19302")]);
   connection.addOnStateChange(() => {
     dispatch(SfuLocalUpstreamStatusChange(connectionId, CONNECTION_STATES[connection.getState()]));
   });
@@ -130,15 +158,15 @@ export const SfuRemoteUpstreamDestroy = createAction('SfuRemoteUpstreamDestroy',
   return resolve({connectionId});
 }});
 
-export const SfuDownstreamCreate = createAction('SfuDownstreamCreate', (resolve) => { return (dispatch: any, connectionId: string, mediaId: string) => {
+export const SfuDownstreamCreate = createAction('SfuDownstreamCreate', (resolve) => { return (dispatch: Dispatch, connectionId: string, mediaId: string) => {
   let remoteMedia = Liveswitch.remoteMediaList[mediaId];
   let connection = Liveswitch.channel.createSfuDownstreamConnection(
     Liveswitch.sfuRemoteUpstreamList[connectionId],
-    new LiveswitchApi.AudioStream(null, remoteMedia), 
-    new LiveswitchApi.VideoStream(null, remoteMedia));
+    new fm.liveswitch.AudioStream(null, remoteMedia), 
+    new fm.liveswitch.VideoStream(null, remoteMedia));
   Liveswitch.sfuDownstreamList[connectionId] = {mediaId, connection};
 
-  connection.setIceServers([new LiveswitchApi.IceServer("stun.l.google.com:19302")]);
+  connection.setIceServers([new fm.liveswitch.IceServer("stun.l.google.com:19302")]);
   connection.addOnStateChange(() => {
     dispatch(SfuDownstreamStatusChange(connectionId, CONNECTION_STATES[connection.getState()]));
   })

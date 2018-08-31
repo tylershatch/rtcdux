@@ -8,10 +8,11 @@ import {
 import * as rtc from './actions';
 import { Effect } from './effects';
 import { State } from './reducers';
+import { Dispatch } from 'redux';
 
 const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 const ARGUMENT_NAMES = /([^\s,]+)/g;
-function getParamNames(func) {
+function getParamNames(func: any) {
   let fnStr = func.toString().replace(STRIP_COMMENTS, '');
   let result = fnStr.slice(fnStr.indexOf('(')+1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
   if(result === null)
@@ -19,9 +20,9 @@ function getParamNames(func) {
   return result;
 }
 
-function selectSfuForLocalMedia(state: State, mediaId) {
+function selectSfuForLocalMedia(state: State, mediaId: string) {
   for (let connectionId in state.sfuLocalUpstreamList) {
-    if (state.sfuLocalUpstreamList[connectionId].mediaId === mediaId) {
+    if ((state.sfuLocalUpstreamList as any)[connectionId].mediaId === mediaId) {
       return connectionId;
     }
   }
@@ -29,9 +30,9 @@ function selectSfuForLocalMedia(state: State, mediaId) {
   return null;
 }
 
-function selectRemoteMediaForSfu(state: State, connectionId) {
+function selectRemoteMediaForSfu(state: State, connectionId: string) {
   for (let mediaId in state.remoteMediaList) {
-    if (state.remoteMediaList[mediaId].sfuConnectionId === connectionId) {
+    if ((state.remoteMediaList as any)[mediaId].sfuConnectionId === connectionId) {
       return mediaId;
     }
   }
@@ -39,22 +40,22 @@ function selectRemoteMediaForSfu(state: State, connectionId) {
   return null;
 }
 
-function selectRemoteClientForRemoteMedia(state: State, mediaId) {
-  return state.remoteMediaList[mediaId].remoteClientId;
+function selectRemoteClientForRemoteMedia(state: State, mediaId: string) {
+  return (state.remoteMediaList as any)[mediaId].remoteClientId;
 }
 
-export function* rtcSaga(dispatch) {
+export function* rtcSaga(dispatch: Dispatch) {
 
   // Bind reject/resolve callbacks
-  yield takeEvery('*', function*(action){
+  yield takeEvery('*', function*(action: any){
     if (action.type.endsWith('Request')) {
       let effectName = action.type.slice(0, -'Request'.length);
 
-      let effect = Effect[effectName];
-      let effectParams = getParamNames(effect).map((name) => ((name === "dispatch") ? dispatch : (action as any).payload[name]));
+      let effect = (Effect as any)[effectName];
+      let effectParams = getParamNames(effect).map((name: string) => ((name === "dispatch") ? dispatch : (action as any).payload[name]));
 
-      let resolveActionCreator = rtc[effectName + "Resolve"];
-      let rejectActionCreator = rtc[effectName + "Reject"];
+      let resolveActionCreator = (rtc as any)[effectName + "Resolve"];
+      let rejectActionCreator = (rtc as any)[effectName + "Reject"];
       
       try {
         let params = getParamNames(resolveActionCreator);
@@ -100,12 +101,12 @@ export function* rtcSaga(dispatch) {
     // For each local media object, tell the remote client to create an associated remote media object
     let localMediaList = yield select((state: State) => state.localMediaList);
     for (let mediaId in localMediaList) {
-      Effect.DispatchToRemoteClient(action.payload, "RemoteMediaCreate", mediaId, localMediaList[mediaId].name, localClientId);
+      Effect.DispatchToRemoteClient(action.payload.remoteClientId, "RemoteMediaCreate", mediaId, localMediaList[mediaId].name, localClientId);
       // If this local media object has an associated sfu upstream connection, tell the remote client to
       // create and associated sfu downstream connection
       let connectionId = yield select((state: State) => selectSfuForLocalMedia(state, mediaId))
       if (connectionId !== null) {
-        Effect.DispatchToRemoteClient(action.payload, "RemoteMediaSfuUpdate", mediaId, connectionId);
+        Effect.DispatchToRemoteClient(action.payload.remoteClientId, "RemoteMediaSfuUpdate", mediaId, connectionId);
       }
     }
   });
@@ -164,7 +165,7 @@ export function* rtcSaga(dispatch) {
 
   yield takeEvery(getType(rtc.SfuRemoteUpstreamCreate), function*(action: ActionType<typeof rtc.SfuRemoteUpstreamCreate>) {
     // (??? see above ^^^^^) If we have a remote media object for this sfu remote upstream connection, create an associated sfu downstream connection
-    let mediaId = yield select((state: State) => selectRemoteMediaForSfu(state, action.payload));
+    let mediaId = yield select((state: State) => selectRemoteMediaForSfu(state, action.payload.connectionId));
     if (mediaId != null) {
       yield put(rtc.SfuDownstreamCreate(dispatch, action.payload.connectionId, mediaId));
     }
@@ -173,7 +174,7 @@ export function* rtcSaga(dispatch) {
   yield takeEvery(getType(rtc.SfuDownstreamCloseRequest), function*(action: ActionType<typeof rtc.SfuDownstreamCloseRequest>) {
     // Whenever we explicitly close an sfu downstream connection, create a new sfu downstream
     // connection to replace it
-    let mediaId = yield select((state: State) => selectRemoteMediaForSfu(state, action.payload));
+    let mediaId = yield select((state: State) => selectRemoteMediaForSfu(state, action.payload.connectionId));
     yield take(getType(rtc.SfuRemoteUpstreamCreate));
     yield put(rtc.SfuDownstreamCreate(dispatch, action.payload.connectionId, mediaId));
   })

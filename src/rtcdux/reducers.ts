@@ -7,14 +7,27 @@ import {
   StateType
 } from "typesafe-actions"
 
-import {
-  LocalMedia,
-  RemoteMedia,
-  Sfu
-} from "./types";
-
 import * as rtc from "./actions"
 type RtcAction = ActionType<typeof rtc>;
+
+export type LocalMedia = {
+  readonly mediaId: string;
+  readonly name: string;
+  readonly sfuConnectionId: string;
+};
+
+export type RemoteMedia = {
+  readonly mediaId: string;
+  readonly name: string;
+  readonly remoteClientId: string;
+  readonly sfuConnectionId: string; 
+};
+
+export type Sfu = {
+  readonly connectionId: string;
+  readonly status: string;
+  readonly mediaId: string;
+};
 
 function localClientId(state: string = null, action: RtcAction) {
   switch(action.type) {
@@ -55,7 +68,7 @@ function remoteMediaList(state: ReadonlyMap<string, RemoteMedia> = new Map(), ac
   switch(action.type) {
     case getType(rtc.RemoteMediaCreate):                 return {...state, [action.payload.mediaId]: action.payload};
     case getType(rtc.RemoteMediaDestroy):                return omit(state, action.payload);
-    case getType(rtc.RemoteMediaSfuUpdate):              return {...state, [action.payload.mediaId]: {...state[action.payload.mediaId], sfuConnectionId: action.payload.connectionId}};
+    case getType(rtc.RemoteMediaSfuUpdate):              return {...state, [action.payload.mediaId]: {...(state as any)[action.payload.mediaId], sfuConnectionId: action.payload.connectionId}};
     default: return state;
   }
 }
@@ -64,7 +77,7 @@ function sfuLocalUpstreamList(state: ReadonlyMap<string, Sfu> = new Map(), actio
   switch(action.type) {
     case getType(rtc.SfuLocalUpstreamCreate):           return {...state, [action.payload.connectionId]: action.payload};
     case getType(rtc.SfuLocalUpstreamDestroy):          return omit(state, action.payload);
-    case getType(rtc.SfuLocalUpstreamStatusChange):     return {...state, [action.payload.connectionId]: {...state[action.payload.connectionId], status: action.payload.status}};
+    case getType(rtc.SfuLocalUpstreamStatusChange):     return {...state, [action.payload.connectionId]: {...(state as any)[action.payload.connectionId], status: action.payload.status}};
     default: return state;
   }
 }
@@ -81,7 +94,7 @@ function sfuDownstreamList(state: ReadonlyMap<string, Sfu> = new Map(), action: 
   switch(action.type) {
     case getType(rtc.SfuDownstreamCreate):               return {...state, [action.payload.connectionId]: action.payload};
     case getType(rtc.SfuDownstreamDestroy):              return omit(state, action.payload);
-    case getType(rtc.SfuDownstreamStatusChange):        return {...state, [action.payload.connectionId]: {...state[action.payload.connectionId], status: action.payload.status}};
+    case getType(rtc.SfuDownstreamStatusChange):        return {...state, [action.payload.connectionId]: {...(state as any)[action.payload.connectionId], status: action.payload.status}};
     default: return state;
   }
 }
