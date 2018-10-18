@@ -18,16 +18,9 @@ const CONNECTION_STATES = {
   [fm.liveswitch.ConnectionState.Failed]:        'FAILED',
 }
 
-// function makeActionCreator<ActionType extends RtcActions.Base>(f : Function) {
-//   Action
-// }
-
-// export const Test = {
-//   ServerConnectRequest: <ActionCreator<RtcActions.ServerConnectRequest>> (() => {
-//     return { type: (typeof this).type, payload: {} }
-//   })
-// }
-
+export const ServerConnectRequest: ActionCreator<RtcActions.ServerConnectRequest> = () => {
+  return { type: "ServerConnectRequest", payload: {}  }
+}
 
 export const ServerConnectResolve: ActionCreator<RtcActions.ServerConnectResolve> = (localClientId: string) => {
   return { type: "ServerConnectResolve", payload: {localClientId}  }

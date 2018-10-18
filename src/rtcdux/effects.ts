@@ -13,7 +13,7 @@ function makePromise(requestCallback: any, resolveCallback: any) {
   });
 }
 
-let g_appId = "my-app2";
+let g_appId = "Spatial";
 
 export const Effect = {
 
