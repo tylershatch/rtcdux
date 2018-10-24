@@ -11,7 +11,8 @@ interface LocalMedia {
 
 interface RemoteMedia {
   mediaId: string;
-  name: string;
+  mediaName: string;
+  mediaOwner: string;
   remoteClientId: string;
   sfuConnectionId: string; 
 };

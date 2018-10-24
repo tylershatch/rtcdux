@@ -101,7 +101,7 @@ export function* rtcSaga(dispatch: Dispatch) {
     // For each local media object, tell the remote client to create an associated remote media object
     let localMediaList = yield select((state: RtcState) => state.localMediaList);
     for (let mediaId in localMediaList) {
-      Effect.DispatchToRemoteClient(action.payload.remoteClientId, "RemoteMediaCreate", mediaId, localMediaList[mediaId].name, localClientId);
+      Effect.DispatchToRemoteClient(action.payload.remoteClientId, "RemoteMediaCreate", mediaId, localMediaList[mediaId].name, "tyler@spatial.is", localClientId);
       // If this local media object has an associated sfu upstream connection, tell the remote client to
       // create and associated sfu downstream connection
       let connectionId = yield select((state: RtcState) => selectSfuForLocalMedia(state, mediaId))
@@ -129,7 +129,7 @@ export function* rtcSaga(dispatch: Dispatch) {
       let localClientId = yield select((state: RtcState) => state.localClientId);
       let remoteClientList = yield select((state: RtcState) => state.remoteClientList);
       for (let remoteClientId in remoteClientList) {
-        Effect.DispatchToRemoteClient(remoteClientId, "RemoteMediaCreate", action.payload.mediaId, action.payload.name, localClientId);
+        Effect.DispatchToRemoteClient(remoteClientId, "RemoteMediaCreate", action.payload.mediaId, action.payload.name, "tyler@spatial.is", localClientId);
       }
 
       // Create and open an sfu upstream connection for this local media object

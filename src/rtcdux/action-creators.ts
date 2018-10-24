@@ -52,12 +52,14 @@ export const ChannelJoinResolve: ActionCreator<RtcActions.ChannelJoinResolve> = 
   }
 
   // If a new remote client joins, create that client
-  channel.addOnRemoteClientJoin((remoteClientInfo) => {
+  // HACK: any type, dafuq
+  channel.addOnRemoteClientJoin((remoteClientInfo: any) => {
     dispatch(RemoteClientCreate(remoteClientInfo));
   });
 
   // If a remote client leaves, destroy that client
-  channel.addOnRemoteClientLeave((remoteClientInfo) => {
+  // HACK: any type, dafuq
+  channel.addOnRemoteClientLeave((remoteClientInfo: any) => {
     dispatch(RemoteClientDestroy(remoteClientInfo.getId()));
   });
 
@@ -136,11 +138,11 @@ export const RemoteMediaSfuUpdate: ActionCreator<RtcActions.RemoteMediaSfuUpdate
   return { type: "RemoteMediaSfuUpdate", payload: {mediaId, connectionId} };
 };
 
-export const RemoteMediaCreate: ActionCreator<RtcActions.RemoteMediaCreate> = (mediaId: string, name: string, remoteClientId: string) => {
+export const RemoteMediaCreate: ActionCreator<RtcActions.RemoteMediaCreate> = (mediaId: string, mediaName: string, mediaOwner: string, remoteClientId: string) => {
   let remoteMedia = new fm.liveswitch.RemoteMedia();
   rtc.internal.remoteMediaList[mediaId] = remoteMedia;
 
-  return { type: "RemoteMediaCreate", payload: {mediaId, name, remoteClientId} };
+  return { type: "RemoteMediaCreate", payload: {mediaId, mediaName, mediaOwner, remoteClientId} };
 };
 
 export const RemoteMediaDestroy: ActionCreator<RtcActions.RemoteMediaDestroy> = (mediaId: string) => {

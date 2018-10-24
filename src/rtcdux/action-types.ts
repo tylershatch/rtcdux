@@ -107,7 +107,8 @@ export interface RemoteMediaCreate extends ActionWithPayload {
   type: "RemoteMediaCreate",
   payload: {
     mediaId: string, 
-    name: string, 
+    mediaName: string,
+    mediaOwner: string,
     remoteClientId: string
   }
 };

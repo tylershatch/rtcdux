@@ -1,6 +1,6 @@
 //
 // Title: LiveSwitch for JavaScript
-// Version: 1.1.4.747
+// Version: 1.2.0.1018
 // Copyright Frozen Mountain Software 2011+
 //
 declare namespace fm.liveswitch {
@@ -20,6 +20,8 @@ declare namespace fm.liveswitch {
         static clone<T>(array: T[]): T[];
         static map<T, R>(array: T[], callback: IFunction3<T, number, T[], R>): R[];
     }
+}
+declare namespace fm.liveswitch {
 }
 declare namespace fm.liveswitch {
 }
@@ -57,10 +59,10 @@ declare namespace fm.liveswitch {
         static tryEncode(b: Uint8Array, result: Holder<string>): boolean;
         static tryEncodeBuffer(buffer: DataBuffer, result: Holder<string>): boolean;
         static tryDecode(s: string, result: Holder<Uint8Array>): boolean;
-        private static b64ToUint6(cc);
-        private static decodeIt(str64, blocksSize?);
-        private static uint6ToB64(b);
-        private static encodeIt(bytes, index, length);
+        private static b64ToUint6;
+        private static decodeIt;
+        private static uint6ToB64;
+        private static encodeIt;
     }
 }
 declare namespace fm.liveswitch {
@@ -114,7 +116,7 @@ declare namespace fm.liveswitch {
     */
     abstract class LogProvider {
         getTypeString(): string;
-        private fmliveswitchLogProviderInit();
+        private fmliveswitchLogProviderInit;
         /**<span id='method-fm.liveswitch.LogProvider-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -131,30 +133,32 @@ declare namespace fm.liveswitch {
          Logs a message at the specified log level.
          </div>
 
-        @param {fm.liveswitch.LogEvent} logItem The log event containing the details.
+        @param {fm.liveswitch.LogEvent} logEvent The log event details.
         @return {void}
         */
-        protected abstract doLog(logItem: fm.liveswitch.LogEvent): void;
+        protected abstract doLog(logEvent: fm.liveswitch.LogEvent): void;
         /**<span id='method-fm.liveswitch.LogProvider-generateLogLine'>&nbsp;</span>**/
         /**
          <div>
          Generates a default log line.
          </div>
 
-        @param {fm.liveswitch.LogEvent} logItem The log event containing the details.
+        @param {fm.liveswitch.LogEvent} logEvent The log event details.
         @return {string}
         */
-        protected generateLogLine(logItem: fm.liveswitch.LogEvent): string;
+        protected generateLogLine(logEvent: fm.liveswitch.LogEvent): string;
         /**<span id='method-fm.liveswitch.LogProvider-getFilter'>&nbsp;</span>**/
         /**
          <div>
          Gets a filter on the log provider.
+         Returning <c>true</c> will log the event,
+         while returning <c>false</c> will skip it.
          </div>
 
 
-        @return {fm.liveswitch.IFunction2<string,fm.liveswitch.LogLevel,boolean>}
+        @return {fm.liveswitch.IFunction1<fm.liveswitch.LogEvent,boolean>}
         */
-        getFilter(): fm.liveswitch.IFunction2<string, fm.liveswitch.LogLevel, boolean>;
+        getFilter(): fm.liveswitch.IFunction1<fm.liveswitch.LogEvent, boolean>;
         /**<span id='method-fm.liveswitch.LogProvider-getLevel'>&nbsp;</span>**/
         /**
          <div>
@@ -195,8 +199,8 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.LogProvider-getPrefixTimestamp'>&nbsp;</span>**/
         /**
          <div>
-         Converts a timestamp to a string formatted for
-         rendering in a log message (yyyy/MM/dd-hh:mm:ss).
+         Converts a timestamp to an ISO-8601-formatted string
+         for rendering in a log message (YYYY-MM-DDThh:mm:ss.sssZ).
          </div>
 
         @param {fm.liveswitch.DateTime} timestamp The timestamp.
@@ -229,21 +233,23 @@ declare namespace fm.liveswitch {
          Log a message.
          </div>
 
-        @param {fm.liveswitch.LogEvent} logItem The log event containing the details.
+        @param {fm.liveswitch.LogEvent} logEvent The log event details.
         @return {void}
         */
-        log(logItem: fm.liveswitch.LogEvent): void;
+        log(logEvent: fm.liveswitch.LogEvent): void;
         /**<span id='method-fm.liveswitch.LogProvider-setFilter'>&nbsp;</span>**/
         /**
          <div>
          Sets a filter on the log provider.
+         Returning <c>true</c> will log the event,
+         while returning <c>false</c> will skip it.
          </div>
 
 
-        @param {fm.liveswitch.IFunction2<string,fm.liveswitch.LogLevel,boolean>} value
+        @param {fm.liveswitch.IFunction1<fm.liveswitch.LogEvent,boolean>} value
         @return {void}
         */
-        setFilter(value: fm.liveswitch.IFunction2<string, fm.liveswitch.LogLevel, boolean>): void;
+        setFilter(value: fm.liveswitch.IFunction1<fm.liveswitch.LogEvent, boolean>): void;
         /**<span id='method-fm.liveswitch.LogProvider-setLevel'>&nbsp;</span>**/
         /**
          <div>
@@ -272,12 +278,21 @@ declare namespace fm.liveswitch {
     }
 }
 declare namespace fm.liveswitch {
+    class DataBufferPool {
+        private static fm_DataBufferPool___singleton;
+        static getInstance(): fm.liveswitch.DataBufferPool;
+        static getIsSupported(): boolean;
+        take(size: number): fm.liveswitch.DataBuffer;
+    }
+}
+declare namespace fm.liveswitch {
     class DateTime {
         getTypeString(): string;
         private _date;
         constructor(date: Date);
         constructor(ticks: number);
         constructor(year: number, month: number, day: number, hour: number, minute: number, second: number);
+        constructor(year: number, month: number, day: number, hour: number, minute: number, second: number, millisecond: number);
         static getNow(): DateTime;
         static getUtcNow(): DateTime;
         getDate(): Date;
@@ -290,6 +305,8 @@ declare namespace fm.liveswitch {
         getMinute(): number;
         getSecond(): number;
         getMillisecond(): number;
+        addHours(hours: number): DateTime;
+        addMinutes(minutes: number): DateTime;
         addSeconds(seconds: number): DateTime;
         addMilliseconds(milliseconds: number): DateTime;
     }
@@ -303,7 +320,7 @@ declare namespace fm.liveswitch {
 declare namespace fm.liveswitch {
     enum DateTimeStyles {
         AssumeUniversal = 1,
-        AdjustToUniversal = 2,
+        AdjustToUniversal = 2
     }
 }
 declare namespace fm.liveswitch {
@@ -816,21 +833,27 @@ declare namespace fm.liveswitch {
         static isIE7(): boolean;
         static isIE8(): boolean;
         static isIE9(): boolean;
+        static isEdge(): boolean;
+        static isChrome(): boolean;
+        static isSafari11(): boolean;
+        static isSafari9(): boolean;
+        static isSafari10(): boolean;
+        static isSafari(): boolean;
+        static isOpera(): boolean;
+        static isWindows(): boolean;
         static isAndroid(): boolean;
         static isBlackBerry(): boolean;
         static isiOS(): boolean;
-        static isOpera(): boolean;
-        static isWindows(): boolean;
         static isMobile(): boolean;
         static hasActiveX(): boolean;
         static hasJava(): boolean;
         static getJavaVersion(): string;
         static isJavaWebStartInstalledActiveX(version: string): boolean;
         static isXD(url1: string, url2?: string): boolean;
-        private static getHost(url?);
-        private static compareHost(host1, host2);
-        private static getCurrentHost();
-        private static parseUrl(url);
+        private static getHost;
+        private static compareHost;
+        private static getCurrentHost;
+        private static parseUrl;
         static absolutizeUrl(url?: string): string;
         static wildcard(str: string): string;
         static getWildcard(): string;
@@ -1015,8 +1038,8 @@ declare namespace fm.liveswitch {
         getTypeString(): string;
         static useMicrosoftDateFormat: boolean;
         private static _dateRegex;
-        private static _reviver(key, value);
-        private static _buildReviver(reviver);
+        private static _reviver;
+        private static _buildReviver;
         static deserialize(text: string, reviver?: (key: any, value: any) => any): any;
         static serialize(value: any): string;
         static serialize(value: any, replacer: (key: string, value: any) => any): string;
@@ -1049,10 +1072,10 @@ declare namespace fm.liveswitch {
         private static _pastScriptFrames;
         private static _scriptFrameDestroyer;
         static getNextCallback(options: JsonpSendOptions): string;
-        private static failureHandler(options, callbackName, message);
+        private static failureHandler;
         static send(options: JsonpSendOptions): void;
-        private static cleanup(callbackName, useFrame);
-        private static callbackExists(callbackName);
+        private static cleanup;
+        private static callbackExists;
     }
 }
 declare namespace fm.liveswitch {
@@ -1291,9 +1314,9 @@ declare namespace fm.liveswitch {
         static getDisableBinary(): boolean;
         static setDefaultWithCredentials(defaultWithCredentials: boolean): void;
         static getDefaultWithCredentials(): boolean;
-        private static failureHandler(options, message);
-        private static successHandler(options, x);
-        private static handler(options, x);
+        private static failureHandler;
+        private static successHandler;
+        private static handler;
         static send(options: XhrSendOptions): boolean;
         private static __initialized;
         static initialize(): void;
@@ -1308,10 +1331,10 @@ declare namespace fm.liveswitch {
         private static _cache;
         private static _optionsCounter;
         private static _optionsCache;
-        private static getOrigin(url);
-        private static createFrame(options, callback);
+        private static getOrigin;
+        private static createFrame;
         static send(options: PostMessageSendOptions): void;
-        private static listen(options, frame);
+        private static listen;
     }
 }
 declare namespace fm.liveswitch {
@@ -1560,7 +1583,7 @@ declare namespace fm.liveswitch {
         InvariantCulture = 2,
         InvariantCultureIgnoreCase = 3,
         Ordinal = 4,
-        OrdinalIgnoreCase = 5,
+        OrdinalIgnoreCase = 5
     }
 }
 declare namespace fm.liveswitch {
@@ -1586,6 +1609,7 @@ declare namespace fm.liveswitch {
         static format(format: string, ...args: any[]): string;
         static toLower(str: string): string;
         static toUpper(str: string): string;
+        static getLength(str: string): number;
         static getChars(str: string): string[];
         static substring(str: string, startIndex: number, length: number): string;
         static getHashCode(str: string): number;
@@ -1743,13 +1767,13 @@ declare namespace fm.liveswitch {
         private onOpen;
         private onError;
         private onClose;
-        private processOnClose(code, reason);
+        private processOnClose;
         private onMessage;
         send(args: WebSocketSendArgs): void;
         close(): void;
         close(args: WebSocketCloseArgs): void;
-        private raiseOnRequestCreated();
-        private raiseOnResponseReceived();
+        private raiseOnRequestCreated;
+        private raiseOnResponseReceived;
     }
 }
 declare namespace fm.liveswitch {
@@ -1761,7 +1785,7 @@ declare namespace fm.liveswitch {
     */
     abstract class Serializable {
         getTypeString(): string;
-        private fmliveswitchSerializableInit();
+        private fmliveswitchSerializableInit;
         /**<span id='method-fm.liveswitch.Serializable-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -1985,6 +2009,7 @@ declare namespace fm.liveswitch {
         getStats(): Future<ConnectionStats>;
         getStreams(): Stream[];
         getTieBreaker(): string;
+        getLegacyTimeout(): boolean;
         getTimeout(): number;
         getTrickleIcePolicy(): TrickleIcePolicy;
         getHasAudio(): boolean;
@@ -2014,15 +2039,16 @@ declare namespace fm.liveswitch {
         setIceServer(value: IceServer): void;
         setIceServers(value: IceServer[]): void;
         setLocalDescription(localDescription: SessionDescription): Future<SessionDescription>;
+        setLegacyTimeout(legacyTimeout: boolean): void;
         setRemoteDescription(remoteDescription: SessionDescription): Future<SessionDescription>;
         setTimeout(value: number): void;
         setTrickleIcePolicy(value: TrickleIcePolicy): void;
         setTieBreaker(value: string): void;
         getRemoteMedia(): RemoteMedia;
-        private externalsToInternals(externals);
-        private externalToInternal(external);
-        private internalsToExternals(internals);
-        private internalToExternal(internal);
+        private externalsToInternals;
+        private externalToInternal;
+        private internalsToExternals;
+        private internalToExternal;
     }
 }
 declare namespace fm.liveswitch {
@@ -2055,11 +2081,12 @@ declare namespace fm.liveswitch {
         getTypeString(): string;
         constructor(channel: DataChannel);
         constructor(channels: DataChannel[]);
+        setGetRemoteConnectionInfo(value: IFunction1<string, any>): void;
         getChannels(): DataChannel[];
-        private externalToInternal(external);
-        private externalsToInternals(externals);
-        private internalToExternal(internal);
-        private internalsToExternals(internals);
+        private externalToInternal;
+        private externalsToInternals;
+        private internalToExternal;
+        private internalsToExternals;
     }
 }
 declare namespace fm.liveswitch {
@@ -2077,7 +2104,7 @@ declare namespace fm.liveswitch {
     */
     class LayoutPreset extends fm.liveswitch.Dynamic {
         getTypeString(): string;
-        private fmliveswitchLayoutPresetInit();
+        private fmliveswitchLayoutPresetInit;
         /**<span id='method-fm.liveswitch.LayoutPreset-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -2650,7 +2677,7 @@ declare namespace fm.liveswitch {
     */
     abstract class LayoutManager<T> extends fm.liveswitch.LayoutPreset {
         getTypeString(): string;
-        private fmliveswitchLayoutManagerInit();
+        private fmliveswitchLayoutManagerInit;
         /**<span id='method-fm.liveswitch.LayoutManager-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -2700,11 +2727,11 @@ declare namespace fm.liveswitch {
          Adds a remote view to the layout.
          </div>
 
-        @param {string} id The remote view ID.
+        @param {string} idValue The remote view ID.
         @param {T} view The remote view.
         @return {boolean} true if successful; otherwise, false. Check the logs for additional information.
         */
-        addRemoteView(id: string, view: T): boolean;
+        addRemoteView(idValue: string, view: T): boolean;
         /**<span id='method-fm.liveswitch.LayoutManager-addRemoteViews'>&nbsp;</span>**/
         /**
          <div>
@@ -2789,10 +2816,10 @@ declare namespace fm.liveswitch {
          Gets a remote view from the layout.
          </div>
 
-        @param {string} id The remote view ID.
+        @param {string} idValue The remote view ID.
         @return {T} The remote view.
         */
-        getRemoteView(id: string): T;
+        getRemoteView(idValue: string): T;
         /**<span id='method-fm.liveswitch.LayoutManager-getRemoteViewIds'>&nbsp;</span>**/
         /**
          <div>
@@ -2870,10 +2897,10 @@ declare namespace fm.liveswitch {
          Removes a remote view from the layout.
          </div>
 
-        @param {string} id The remote view ID.
+        @param {string} idValue The remote view ID.
         @return {boolean} true if successful; otherwise, false. Check the logs for additional information.
         */
-        removeRemoteView(id: string): boolean;
+        removeRemoteView(idValue: string): boolean;
         /**<span id='method-fm.liveswitch.LayoutManager-removeRemoteViews'>&nbsp;</span>**/
         /**
          <div>
@@ -3068,14 +3095,15 @@ declare namespace fm.liveswitch {
         setAudioGain(value: number): void;
         setAudioMuted(value: boolean): void;
         setAudioVolume(value: number): void;
+        setId(value: string): void;
         setVideoMuted(value: boolean): void;
         destroy(): void;
         getView(): HTMLElement;
         getViewSink(): DomVideoSink;
-        private externalsToInternals(externals);
-        private externalToInternal(external);
-        private internalsToExternals(internals);
-        private internalToExternal(internal);
+        private externalsToInternals;
+        private externalToInternal;
+        private internalsToExternals;
+        private internalToExternal;
     }
 }
 declare namespace fm.liveswitch {
@@ -3172,9 +3200,10 @@ declare namespace fm.liveswitch {
         static hasNative(localMedia?: boolean, dataChannels?: boolean): boolean;
         static hasActiveX(): boolean;
         static isReady(localMedia?: boolean, dataChannels?: boolean): boolean;
+        static isSupported(localMedia?: boolean, dataChannels?: boolean): boolean;
         static useActiveX(localMedia?: boolean, dataChannels?: boolean): boolean;
         static useNative(localMedia?: boolean, dataChannels?: boolean): boolean;
-        private static checkForActiveX(promise, object, startTime);
+        private static checkForActiveX;
         static getChromeExtensionId(): string;
         static setChromeExtensionId(chromeExtensionId: string): void;
         static getChromeExtensionUrl(): string;
@@ -3273,7 +3302,7 @@ declare namespace fm.liveswitch.dtmf {
     */
     class Tone {
         getTypeString(): string;
-        private fmliveswitchdtmfToneInit();
+        private fmliveswitchdtmfToneInit;
         constructor();
         /**<span id='method-fm.liveswitch.dtmf.Tone-constructor'>&nbsp;</span>**/
         /**
@@ -3875,7 +3904,7 @@ declare namespace fm.liveswitch {
     class PluginAudioTrack extends PluginMediaTrack implements IAudioTrack, IInternalAudioTrack {
         getTypeString(): string;
         constructor(external: IExternalAudioTrack, media: PluginMedia);
-        private isLocal();
+        private isLocal;
         addOnStarted(value: IAction0): void;
         addOnStopped(value: IAction0): void;
         addOnDestroyed(value: IAction0): void;
@@ -3937,6 +3966,7 @@ declare namespace fm.liveswitch {
         GetIceServer(): string;
         GetIceServers(): string;
         GetId(): string;
+        GetLegacyTimeout(): boolean;
         GetLocalDescription(): string;
         GetRemoteDescription(): string;
         GetSignallingState(): number;
@@ -3953,6 +3983,7 @@ declare namespace fm.liveswitch {
         SetIceGatherPolicy(iceGatherPolicy: number): void;
         SetIceServer(iceServer: string): void;
         SetIceServers(iceServers: string): void;
+        SetLegacyTimeout(value: boolean): void;
         SetLocalDescription(localDescription: string, promise: Object): void;
         SetOnExternalIdChange(callback: Object): void;
         SetOnGatheringStateChange(callback: Object): void;
@@ -4014,6 +4045,7 @@ declare namespace fm.liveswitch {
         getStreams(): PluginStream[];
         getTieBreaker(): string;
         getTimeout(): number;
+        getLegacyTimeout(): boolean;
         getTrickleIcePolicy(): TrickleIcePolicy;
         getIceConnectionState(): IceConnectionState;
         getGatheringState(): IceGatheringState;
@@ -4033,6 +4065,7 @@ declare namespace fm.liveswitch {
         setIceGatherPolicy(value: IceGatherPolicy): void;
         setIceServer(value: IceServer): void;
         setIceServers(value: IceServer[]): void;
+        setLegacyTimeout(value: boolean): void;
         setTieBreaker(value: string): void;
         setLocalDescription(localDescription: SessionDescription): Future<SessionDescription>;
         setRemoteDescription(remoteDescription: SessionDescription): Future<SessionDescription>;
@@ -4055,8 +4088,8 @@ declare namespace fm.liveswitch {
         GetState(): number;
         GetSubprotocol(): string;
         Initialize(label: string, ordered: boolean, subprotocol: string): void;
-        PromisedSendDataBytes(data: string, promise: Object): void;
-        PromisedSendDataString(dataString: string, promise: Object): void;
+        PrepareAndSendBytes(data: string, promise: Object): void;
+        PrepareAndSendString(dataString: string, promise: Object): void;
         SetOnReceive(callback: Object): void;
         SetOnStateChange(callback: Object): void;
     }
@@ -4068,6 +4101,8 @@ declare namespace fm.liveswitch {
         getTypeString(): string;
         getHandle(): number;
         constructor(external: IExternalDataChannel, label: string, ordered?: boolean, subprotocol?: string);
+        private _getRemoteConnectionInfo;
+        setGetRemoteConnectionInfo(value: IFunction1<string, any>): void;
         addOnStateChange(value: IAction1<PluginDataChannel>): void;
         getLabel(): string;
         getOnReceive(): IAction1<DataChannelReceiveArgs>;
@@ -4143,7 +4178,7 @@ declare namespace fm.liveswitch {
     }
 }
 declare namespace fm.liveswitch {
-    class PluginDomAudioSink extends Dynamic implements IInternal<DomAudioSink> {
+    class PluginDomAudioSink extends Dynamic implements /*ISoundSink<HTMLElement>,*/ IInternal<DomAudioSink> {
         getTypeString(): string;
         getTrack(): PluginAudioTrack;
         getLocal(): boolean;
@@ -4175,7 +4210,7 @@ declare namespace fm.liveswitch {
         setViewMirror(viewMirror: boolean): void;
         constructor(external: IExternalDomVideoSink, track: PluginVideoTrack);
         setTrack(track: PluginVideoTrack): boolean;
-        private checkifLoaded(object);
+        private checkifLoaded;
     }
 }
 interface MediaActiveXObject extends ActiveXObject {
@@ -4191,6 +4226,7 @@ interface MediaActiveXObject extends ActiveXObject {
     SetAudioGain(value: number): void;
     SetAudioMuted(value: boolean): void;
     SetAudioVolume(value: number): void;
+    SetId(value: string): void;
     SetOnAudioLevel(callback: Object): void;
     SetOnVideoSize(callback: Object): void;
     SetVideoMuted(value: boolean): void;
@@ -4222,6 +4258,7 @@ declare namespace fm.liveswitch {
         setAudioGain(value: number): void;
         setAudioMuted(value: boolean): void;
         setAudioVolume(value: number): void;
+        setId(value: string): void;
         setVideoMuted(value: boolean): void;
         getView(): HTMLElement;
         getViewSink(): PluginDomVideoSink;
@@ -4259,6 +4296,7 @@ declare namespace fm.liveswitch {
         SetAudioMuted(muted: boolean): void;
         SetAudioSourceInput(value: string): void;
         SetAudioVolume(volume: number): void;
+        SetId(idValue: string): void;
         SetOnAudioDestroyed(callback: Object): void;
         SetOnAudioLevel(callback: Object): void;
         SetOnAudioStarted(callback: Object): void;
@@ -4317,7 +4355,7 @@ declare namespace fm.liveswitch {
         setAudioGain(value: number): void;
         setAudioMuted(value: boolean): void;
         setVideoMuted(value: boolean): void;
-        private checkifLoaded(object);
+        private checkifLoaded;
     }
 }
 declare namespace fm.liveswitch {
@@ -4349,6 +4387,7 @@ declare namespace fm.liveswitch {
         SetAudioMuted(muted: boolean): void;
         SetAudioSinkOutput(value: string): void;
         SetAudioVolume(volume: number): void;
+        SetId(idValue: string): void;
         SetOnAudioDestroyed(callback: Object): void;
         SetOnAudioLevel(callback: Object): void;
         SetOnVideoDestroyed(callback: Object): void;
@@ -4363,7 +4402,7 @@ declare namespace fm.liveswitch {
     class PluginRemoteMedia extends PluginMedia implements IRemoteMedia<PluginAudioTrack, PluginVideoTrack>, IInternalRemoteMedia {
         getTypeString(): string;
         constructor(external: IExternalRemoteMedia);
-        private checkifLoaded(object);
+        private checkifLoaded;
         getHandle(): number;
         addOnAudioDestroyed(value: IAction0): void;
         addOnVideoDestroyed(value: IAction0): void;
@@ -4461,7 +4500,7 @@ declare namespace fm.liveswitch {
     class PluginVideoTrack extends PluginMediaTrack implements IVideoTrack, IInternalVideoTrack {
         getTypeString(): string;
         constructor(external: IExternalVideoTrack, media: PluginMedia);
-        private isLocal();
+        private isLocal;
         addOnStarted(value: IAction0): void;
         addOnStopped(value: IAction0): void;
         addOnDestroyed(value: IAction0): void;
@@ -4541,7 +4580,7 @@ declare namespace fm.liveswitch {
     */
     abstract class WebRtcStreamBase extends fm.liveswitch.Dynamic implements fm.liveswitch.IStream {
         getTypeString(): string;
-        private fmliveswitchWebRtcStreamBaseInit();
+        private fmliveswitchWebRtcStreamBaseInit;
         /**<span id='method-fm.liveswitch.WebRtcStreamBase-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -4831,17 +4870,6 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         setLocalSend(value: boolean): void;
-        /**<span id='method-fm.liveswitch.WebRtcStreamBase-setRemoteDirection'>&nbsp;</span>**/
-        /**
-         <div>
-         Sets current direction indicated by the remote description.
-         </div>
-
-
-        @param {fm.liveswitch.StreamDirection} value
-        @return {void}
-        */
-        protected abstract setRemoteDirection(value: fm.liveswitch.StreamDirection): void;
         /**<span id='method-fm.liveswitch.WebRtcStreamBase-setTag'>&nbsp;</span>**/
         /**
          <div>
@@ -4882,7 +4910,7 @@ declare namespace fm.liveswitch {
     */
     abstract class WebRtcMediaStreamBase extends fm.liveswitch.WebRtcStream implements fm.liveswitch.IMediaStream, fm.liveswitch.IStream {
         getTypeString(): string;
-        private fmliveswitchWebRtcMediaStreamBaseInit();
+        private fmliveswitchWebRtcMediaStreamBaseInit;
         /**<span id='method-fm.liveswitch.WebRtcMediaStreamBase-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -5039,17 +5067,6 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         protected setRemoteBandwidth(value: number): void;
-        /**<span id='method-fm.liveswitch.WebRtcMediaStreamBase-setRemoteDirection'>&nbsp;</span>**/
-        /**
-         <div>
-         Sets current direction indicated by the remote description.
-         </div>
-
-
-        @param {fm.liveswitch.StreamDirection} value
-        @return {void}
-        */
-        protected setRemoteDirection(value: fm.liveswitch.StreamDirection): void;
         /**<span id='method-fm.liveswitch.WebRtcMediaStreamBase-setRenegotiationPending'>&nbsp;</span>**/
         /**
          <div>
@@ -5323,7 +5340,7 @@ declare namespace fm.liveswitch {
     class WebRtcAudioTrack extends WebRtcMediaTrack implements IAudioTrack, IInternalAudioTrack {
         getTypeString(): string;
         constructor(external: IExternalAudioTrack, media: WebRtcMedia<WebRtcAudioTrack, WebRtcVideoTrack>);
-        private isLocal();
+        private isLocal;
         changeSinkOutput(sinkOutput: SinkOutput): Future<Object>;
         getSinkOutput(): SinkOutput;
         getSinkOutputs(): Future<SinkOutput[]>;
@@ -5349,7 +5366,7 @@ declare namespace fm.liveswitch {
     */
     abstract class WebRtcConnectionBase<TConnection extends fm.liveswitch.WebRtcConnectionBase<TConnection, TStream, TAudioStream, TVideoStream, TDataStream, TDataChannel>, TStream extends fm.liveswitch.WebRtcStreamBase, TAudioStream extends fm.liveswitch.IAudioStream, TVideoStream extends fm.liveswitch.IVideoStream, TDataStream extends fm.liveswitch.IDataStream<TDataChannel>, TDataChannel extends fm.liveswitch.IDataChannel<TDataChannel>> extends fm.liveswitch.Dynamic implements fm.liveswitch.IConnection<TConnection, TStream, TAudioStream, TVideoStream, TDataStream> {
         getTypeString(): string;
-        private fmliveswitchWebRtcConnectionBaseInit();
+        private fmliveswitchWebRtcConnectionBaseInit;
         /**<span id='method-fm.liveswitch.WebRtcConnectionBase-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -5799,6 +5816,26 @@ declare namespace fm.liveswitch {
         @return {boolean}
         */
         getIsTerminatingOrTerminated(): boolean;
+        /**<span id='method-fm.liveswitch.WebRtcConnectionBase-getLegacyTimeout'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets a value indicating whether legacy Connection.Timeout should be used.
+         When disabled, Connection.Timeout only accounts for the time spent trying to establish
+         connectivity (i.e. time it takes to transition from the Connecting to the Connected state;
+         from the time point when both offer and answer had been set to the connection
+         being fully established).
+         When enabled, Connection.Timeout accounts for the time spent from receiving an offer (or creating an
+         offer) to establishing connectivity (i.e. time it takes to transition from Initializing to Connected
+         state).
+         By default, LegacyTimeout is set to true, so that existing behavior is preserved. However, in the future
+         default will be updated to false. This means that IL will not account for any signalling delays that may
+         occur while establishing connectivity. This option will be later deprecated.
+         </div>
+
+
+        @return {boolean}
+        */
+        getLegacyTimeout(): boolean;
         /**<span id='method-fm.liveswitch.WebRtcConnectionBase-getLocalDescription'>&nbsp;</span>**/
         /**
          <div>
@@ -6186,6 +6223,27 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         setIceServers(value: fm.liveswitch.IceServer[]): void;
+        /**<span id='method-fm.liveswitch.WebRtcConnectionBase-setLegacyTimeout'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets a value indicating whether legacy Connection.Timeout should be used.
+         When disabled, Connection.Timeout only accounts for the time spent trying to establish
+         connectivity (i.e. time it takes to transition from the Connecting to the Connected state;
+         from the time point when both offer and answer had been set to the connection
+         being fully established).
+         When enabled, Connection.Timeout accounts for the time spent from receiving an offer (or creating an
+         offer) to establishing connectivity (i.e. time it takes to transition from Initializing to Connected
+         state).
+         By default, LegacyTimeout is set to true, so that existing behavior is preserved. However, in the future
+         default will be updated to false. This means that IL will not account for any signalling delays that may
+         occur while establishing connectivity. This option will be later deprecated.
+         </div>
+
+
+        @param {boolean} value
+        @return {void}
+        */
+        setLegacyTimeout(value: boolean): void;
         /**<span id='method-fm.liveswitch.WebRtcConnectionBase-setLocalDescription'>&nbsp;</span>**/
         /**
          <div>
@@ -6270,41 +6328,42 @@ declare namespace fm.liveswitch {
         getNativeRtpReceivers(): RTCRtpReceiver[];
         constructor(external: IExternalConnection, streams: WebRtcStream[], remoteMedia: WebRtcRemoteMedia);
         getInstance(): WebRtcConnection;
-        private addStreamInternal(stream);
-        private addStreamsInternal(streams);
+        private addStreamInternal;
+        private addStreamsInternal;
         processStateChange(): void;
+        private startConnectionTimeout;
         getStreams(): WebRtcStream[];
         getMediaStreams(): WebRtcMediaStream<WebRtcMediaTrack>[];
         getAudioStreams(): WebRtcAudioStream[];
         getVideoStreams(): WebRtcVideoStream[];
         getDataStreams(): WebRtcDataStream[];
         getStats(): Future<ConnectionStats>;
-        private getMediaSenderStats(mediaSenderId, report);
-        private getMediaReceiverStats(mediaReceiverId, report);
-        private getTransportStats(transportId, report, mediaSenderStats, mediaReceiverStats);
-        private getCertificateStats(certificateId, report);
-        private getCandidateStats(candidateId, report);
-        private getCandidatePairStats(candidatePairId, report);
-        private getCodecStats(codecId, report, sender);
-        private getMediaTrackStats(mediaTrackId, report);
-        private initialize();
-        private initializeTrack(element, rtcServers);
-        private validateCandidate(candidate);
-        private createIceGatherer(rtcServers);
-        private sessionDescriptionTypeToString(typeEnum);
-        private sessionDescriptionTypeToEnum(typeString);
-        private webrtcCandidateToCandidate(webrtcCandidate);
-        private webrtcCandidateFromCandidate(candidate);
-        private webrtcSessionDescriptionToSessionDescription(webrtcSessionDescription);
-        private webrtcSessionDescriptionFromSessionDescription(sessionDescription);
-        private rtcCandidateToSdpCandidateAttribute(rtcCandidate);
-        private rtcCandidateFromSdpCandidateAttribute(sdpCandidateAttribute);
-        private ortcCandidateToCandidate(ortcCandidate);
-        private ortcCandidateFromCandidate(candidate);
-        private ortcSessionDescriptionToSessionDescription(ortcSessionDescription);
-        private ortcSessionDescriptionFromSessionDescription(sessionDescription);
-        private applyMediaFormatParametersAttributes(codecCap, mediaFormatParametersList);
-        private applyMediaFeedbackAttributes(codecCap, mediaFeedbackAttributeList);
+        private getMediaSenderStats;
+        private getMediaReceiverStats;
+        private getTransportStats;
+        private getCertificateStats;
+        private getCandidateStats;
+        private getCandidatePairStats;
+        private getCodecStats;
+        private getMediaTrackStats;
+        private initialize;
+        private initializeTrack;
+        private validateCandidate;
+        private createIceGatherer;
+        private sessionDescriptionTypeToString;
+        private sessionDescriptionTypeToEnum;
+        private webrtcCandidateToCandidate;
+        private webrtcCandidateFromCandidate;
+        private webrtcSessionDescriptionToSessionDescription;
+        private webrtcSessionDescriptionFromSessionDescription;
+        private rtcCandidateToSdpCandidateAttribute;
+        private rtcCandidateFromSdpCandidateAttribute;
+        private ortcCandidateToCandidate;
+        private ortcCandidateFromCandidate;
+        private ortcSessionDescriptionToSessionDescription;
+        private ortcSessionDescriptionFromSessionDescription;
+        private applyMediaFormatParametersAttributes;
+        private applyMediaFeedbackAttributes;
         /**<span id='method-fm.liveswitch.Connection-getIceCandidateProcessingTimeout'>&nbsp;</span>**/
         /**
          <div>
@@ -6334,36 +6393,36 @@ declare namespace fm.liveswitch {
         setIceCandidateProcessingTimeout(value: number): void;
         protected doCreateOffer(promise: Promise<SessionDescription>): boolean;
         protected doCreateAnswer(promise: Promise<SessionDescription>): void;
-        private setNativeDescriptionSuccess(sessionDescription, promise);
-        private doCreate(promise);
+        private setNativeDescriptionSuccess;
+        private doCreate;
         getLocalDescription(): SessionDescription;
         getGatheringState(): IceGatheringState;
         getIceConnectionState(): IceConnectionState;
         protected setGatheringState(state: IceGatheringState): void;
         protected setIceConnectionState(state: IceConnectionState): void;
         getRemoteDescription(): SessionDescription;
-        private updateLocalDescription(localDescription);
+        private updateLocalDescription;
         protected doSetLocalDescription(promise: Promise<SessionDescription>, localDescription: SessionDescription): void;
-        private processRemoteDescriptionOnRenegotiation(promise, remoteDescription);
-        private removeSdesAttributesIfNeeded(remoteDescription);
+        private processRemoteDescriptionOnRenegotiation;
+        private removeSdesAttributesIfNeeded;
         protected doSetRemoteDescription(promise: Promise<SessionDescription>, remoteDescription: SessionDescription): void;
         protected doSendCachedLocalCandidates(): void;
         protected processSdpMediaDescription(stream: WebRtcStream, sdpMediaDescription: sdp.MediaDescription, sdpMediaIndex: number, isLocalDescription: boolean, isRenegotiation: boolean): Error;
-        private startOrtc();
-        private startOrtcTrack(iceGatherer, iceTransport, dtlsTransport, localMediaDescription, remoteMediaDescription);
-        private selectCodecs(mediaIndex);
-        private selectEncodings(mediaIndex, send);
-        private selectRtcp(mediaIndex, send);
+        private startOrtc;
+        private startOrtcTrack;
+        private selectCodecs;
+        private selectEncodings;
+        private selectRtcp;
         protected doAddRemoteCandidate(promise: Promise<Candidate>, remoteCandidate: Candidate): void;
-        private setRemoteCandidatesDoneTimer();
+        private setRemoteCandidatesDoneTimer;
         protected assignRemoteDescriptionInternal(sessionDescription: SessionDescription): void;
         close(): void;
-        private doClose();
+        private doClose;
         private dtmfSender;
         getDtmfSender(): RTCDtmfSender;
         replaceLocalTrack(localTrack: WebRtcMediaTrack, mediaStream: WebRtcMediaStream<WebRtcMediaTrack>): Future<object>;
         replaceRemoteTrack(remoteTrack: WebRtcMediaTrack, mediaStream: WebRtcMediaStream<WebRtcMediaTrack>): Future<object>;
-        private getRtpSender(mediaStreamIndex);
+        private getRtpSender;
     }
 }
 declare namespace fm.liveswitch {
@@ -6375,7 +6434,7 @@ declare namespace fm.liveswitch {
     */
     abstract class WebRtcDataChannelBase<TDataChannel> extends fm.liveswitch.Dynamic implements fm.liveswitch.IDataChannel<TDataChannel> {
         getTypeString(): string;
-        private fmliveswitchWebRtcDataChannelBaseInit();
+        private fmliveswitchWebRtcDataChannelBaseInit;
         /**<span id='method-fm.liveswitch.WebRtcDataChannelBase-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -6603,34 +6662,11 @@ declare namespace fm.liveswitch {
         setOnReceive(value: fm.liveswitch.IAction1<fm.liveswitch.DataChannelReceiveArgs>): void;
     }
 }
-interface RTCMessageEvent {
-    data: any;
-}
-interface RTCDataChannel extends EventTarget {
-    label: string;
-    reliable: boolean;
-    readyState: string;
-    bufferedAmount: number;
-    binaryType: string;
-    onopen: (event: Event) => void;
-    onerror: (event: Event) => void;
-    onclose: (event: Event) => void;
-    onmessage: (event: RTCMessageEvent) => void;
-    close(): void;
-    send(data: string): void;
-    send(data: ArrayBuffer): void;
-    send(data: ArrayBufferView): void;
-    send(data: Blob): void;
-}
-declare var RTCDataChannel: {
-    prototype: RTCDataChannel;
-    new (): RTCDataChannel;
-};
 declare namespace fm.liveswitch {
     class WebRtcDataChannel extends WebRtcDataChannelBase<WebRtcDataChannel> implements IInternalDataChannel {
         getTypeString(): string;
-        getNativeDataChannel(): RTCDataChannel;
-        setNativeDataChannel(nativeDataChannel: RTCDataChannel): void;
+        getNativeDataChannel(): any;
+        setNativeDataChannel(nativeDataChannel: any): void;
         constructor(external: IExternalDataChannel, label: string, ordered?: boolean, subprotocol?: string);
         getInstance(): WebRtcDataChannel;
         sendDataString(dataString: string): fm.liveswitch.Future<Object>;
@@ -6748,17 +6784,6 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         setLocalDirection(value: fm.liveswitch.StreamDirection): void;
-        /**<span id='method-fm.liveswitch.WebRtcDataStreamBase-setRemoteDirection'>&nbsp;</span>**/
-        /**
-         <div>
-         Sets the current direction.
-         </div>
-
-
-        @param {fm.liveswitch.StreamDirection} value
-        @return {void}
-        */
-        protected setRemoteDirection(value: fm.liveswitch.StreamDirection): void;
     }
 }
 declare namespace fm.liveswitch {
@@ -6769,7 +6794,7 @@ declare namespace fm.liveswitch {
     }
 }
 declare namespace fm.liveswitch {
-    class WebRtcDomAudioSink extends Dynamic implements IInternal<DomAudioSink> {
+    class WebRtcDomAudioSink extends Dynamic implements /*ISoundSink<HTMLElement>,*/ IInternal<DomAudioSink> {
         getTypeString(): string;
         getTrack(): WebRtcAudioTrack;
         getLocal(): boolean;
@@ -6801,7 +6826,7 @@ declare namespace fm.liveswitch {
         setMuted(muted: boolean): void;
         constructor(external: IExternalDomVideoSink, track: WebRtcVideoTrack);
         setTrack(track: WebRtcVideoTrack): boolean;
-        private applyScale(scale);
+        private applyScale;
     }
 }
 declare namespace fm.liveswitch {
@@ -6813,6 +6838,15 @@ declare namespace fm.liveswitch {
     */
     abstract class WebRtcMediaBase<TIAudioTrack extends fm.liveswitch.IAudioTrack, TIVideoTrack extends fm.liveswitch.IVideoTrack> extends fm.liveswitch.Dynamic implements fm.liveswitch.IMedia<TIAudioTrack, TIVideoTrack> {
         getTypeString(): string;
+        /**<span id='method-fm.liveswitch.WebRtcMediaBase-constructor'>&nbsp;</span>**/
+        /**
+         <div>
+         Initializes a new instance of the `fm.liveswitch.mediaBase` class.
+         </div>
+
+
+        @return {}
+        */
         constructor();
         /**<span id='method-fm.liveswitch.WebRtcMediaBase-addOnAudioDestroyed'>&nbsp;</span>**/
         /**
@@ -7065,6 +7099,17 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         setAudioVolume(value: number): void;
+        /**<span id='method-fm.liveswitch.WebRtcMediaBase-setId'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the identifier.
+         </div>
+
+
+        @param {string} value
+        @return {void}
+        */
+        setId(value: string): void;
         /**<span id='method-fm.liveswitch.WebRtcMediaBase-setVideoMuted'>&nbsp;</span>**/
         /**
          <div>
@@ -7202,11 +7247,11 @@ declare namespace fm.liveswitch {
         removeOnVideoStopped(value: IAction0): void;
         getAudioSourceInputs(): Future<SourceInput[]>;
         getVideoSourceInputs(): Future<SourceInput[]>;
-        private getSourceInputs(kind);
-        private _audioInput;
+        private getSourceInputs;
+        private _audioSourceInput;
         getAudioSourceInput(): SourceInput;
         setAudioSourceInput(audioInput: SourceInput): void;
-        private _videoInput;
+        private _videoSourceInput;
         getVideoSourceInput(): SourceInput;
         setVideoSourceInput(videoInput: SourceInput): void;
         getAudio(): any;
@@ -7219,11 +7264,11 @@ declare namespace fm.liveswitch {
         getVideoConstraints(): MediaTrackConstraints;
         changeAudioConstraints(audioConstraints: MediaTrackConstraints): Future<Object>;
         changeVideoConstraints(videoConstraints: MediaTrackConstraints): Future<Object>;
-        changeAudioSourceInput(audioInput: SourceInput): Future<Object>;
-        changeVideoSourceInput(videoInput: SourceInput): Future<Object>;
+        changeAudioSourceInput(audioSourceInput: SourceInput): Future<Object>;
+        changeVideoSourceInput(videoSourceInput: SourceInput): Future<Object>;
         constructor(external: IExternalLocalMedia, audio: any, video: any, screen?: boolean);
         doStart(): Future<WebRtcLocalMedia>;
-        private doStartInternal(promise);
+        private doStartInternal;
         doStop(): Future<WebRtcLocalMedia>;
     }
 }
@@ -7233,10 +7278,10 @@ declare namespace fm.liveswitch {
         constructor(external: IExternalRemoteMedia);
         getAudioSinkOutputs(): Future<SinkOutput[]>;
         getVideoSinkOutputs(): Future<SinkOutput[]>;
-        private getSinkOutputs(kind);
+        private getSinkOutputs;
         getAudioSinkOutput(): SinkOutput;
         setAudioSinkOutput(audioSinkOutput: SinkOutput): void;
-        private attachAudioSinkOutput(audioSinkOutput, element);
+        private attachAudioSinkOutput;
         getVideoSinkOutput(): SinkOutput;
         setVideoSinkOutput(videoSinkOutput: SinkOutput): void;
         changeAudioSinkOutput(audioInput: SinkOutput): Future<Object>;
@@ -7254,7 +7299,7 @@ declare namespace fm.liveswitch {
         getTypeString(): string;
         constructor(external: IExternalVideoTrack, media: WebRtcMedia<WebRtcAudioTrack, WebRtcVideoTrack>);
         setConfig(config: VideoConfig): void;
-        private isLocal();
+        private isLocal;
         changeSinkOutput(sinkOutput: SinkOutput): Future<Object>;
         getSinkOutput(): SinkOutput;
         getSinkOutputs(): Future<SinkOutput[]>;
@@ -7312,7 +7357,7 @@ declare namespace fm.liveswitch {
         @field Unknown
         @type {fm.liveswitch.AddressType}
         */
-        Unknown = 3,
+        Unknown = 3
     }
 }
 declare namespace fm.liveswitch {
@@ -7404,7 +7449,7 @@ declare namespace fm.liveswitch {
         @field WatchOS
         @type {fm.liveswitch.OperatingSystem}
         */
-        WatchOS = 8,
+        WatchOS = 8
     }
 }
 declare namespace fm.liveswitch {
@@ -7494,7 +7539,7 @@ declare namespace fm.liveswitch {
         @field Mips64
         @type {fm.liveswitch.Architecture}
         */
-        Mips64 = 8,
+        Mips64 = 8
     }
 }
 declare namespace fm.liveswitch {
@@ -7544,7 +7589,7 @@ declare namespace fm.liveswitch {
         @field TypeScript
         @type {fm.liveswitch.SourceLanguage}
         */
-        TypeScript = 4,
+        TypeScript = 4
     }
 }
 declare namespace fm.liveswitch {
@@ -7586,7 +7631,7 @@ declare namespace fm.liveswitch {
         @field Positive
         @type {fm.liveswitch.CompareResult}
         */
-        Positive = 3,
+        Positive = 3
     }
 }
 declare namespace fm.liveswitch {
@@ -7626,7 +7671,7 @@ declare namespace fm.liveswitch {
         @field Sha256
         @type {fm.liveswitch.HashType}
         */
-        Sha256 = 3,
+        Sha256 = 3
     }
 }
 declare namespace fm.liveswitch {
@@ -7666,7 +7711,7 @@ declare namespace fm.liveswitch {
         @field HmacSha256
         @type {fm.liveswitch.MacType}
         */
-        HmacSha256 = 3,
+        HmacSha256 = 3
     }
 }
 declare namespace fm.liveswitch {
@@ -8412,7 +8457,7 @@ declare namespace fm.liveswitch {
         @field IceInvalidServerAssignmentError
         @type {fm.liveswitch.ErrorCode}
         */
-        IceInvalidServerAssignmentError = 113001,
+        IceInvalidServerAssignmentError = 113001
     }
 }
 declare namespace fm.liveswitch {
@@ -8482,7 +8527,7 @@ declare namespace fm.liveswitch {
         @field Delete
         @type {fm.liveswitch.HttpMethod}
         */
-        Delete = 6,
+        Delete = 6
     }
 }
 declare namespace fm.liveswitch {
@@ -8562,7 +8607,7 @@ declare namespace fm.liveswitch {
         @field None
         @type {fm.liveswitch.LogLevel}
         */
-        None = 7,
+        None = 7
     }
 }
 declare namespace fm.liveswitch {
@@ -8602,7 +8647,7 @@ declare namespace fm.liveswitch {
         @field Rejected
         @type {fm.liveswitch.FutureState}
         */
-        Rejected = 3,
+        Rejected = 3
     }
 }
 declare namespace fm.liveswitch {
@@ -8750,7 +8795,7 @@ declare namespace fm.liveswitch {
         @field SecureHandshakeFailure
         @type {fm.liveswitch.WebSocketStatusCode}
         */
-        SecureHandshakeFailure = 1015,
+        SecureHandshakeFailure = 1015
     }
 }
 declare namespace fm.liveswitch {
@@ -8810,7 +8855,7 @@ declare namespace fm.liveswitch {
         @field Disconnected
         @type {fm.liveswitch.SignallingClientState}
         */
-        Disconnected = 5,
+        Disconnected = 5
     }
 }
 declare namespace fm.liveswitch {
@@ -8853,7 +8898,7 @@ declare namespace fm.liveswitch {
         @field Default
         @type {fm.liveswitch.ConcurrencyMode}
         */
-        Default = 1,
+        Default = 1
     }
 }
 declare namespace fm.liveswitch {
@@ -8923,7 +8968,7 @@ declare namespace fm.liveswitch {
         @field NotSet
         @type {fm.liveswitch.SignallingConnectionType}
         */
-        NotSet = 99,
+        NotSet = 99
     }
 }
 declare namespace fm.liveswitch {
@@ -9033,7 +9078,7 @@ declare namespace fm.liveswitch {
         @field Unknown
         @type {fm.liveswitch.SignallingMessageType}
         */
-        Unknown = 11,
+        Unknown = 11
     }
 }
 declare namespace fm.liveswitch {
@@ -9063,7 +9108,7 @@ declare namespace fm.liveswitch {
         @field Unsubscribe
         @type {fm.liveswitch.PresenceType}
         */
-        Unsubscribe = 2,
+        Unsubscribe = 2
     }
 }
 declare namespace fm.liveswitch {
@@ -9113,7 +9158,67 @@ declare namespace fm.liveswitch {
         @field NotSet
         @type {fm.liveswitch.Reconnect}
         */
-        NotSet = 99,
+        NotSet = 99
+    }
+}
+declare namespace fm.liveswitch {
+    /**
+     <div>
+     The CCM FIR policy.
+     </div>
+
+    */
+    enum CcmFirPolicy {
+        /** <span id='prop-fm.liveswitch.CcmFirPolicy-Disabled'>&nbsp;</span> **/
+        /**
+         <div>
+         The usage of CCM FIR is disabled.
+         </div>
+
+        @field Disabled
+        @type {fm.liveswitch.CcmFirPolicy}
+        */
+        Disabled = 1,
+        /** <span id='prop-fm.liveswitch.CcmFirPolicy-Negotiated'>&nbsp;</span> **/
+        /**
+         <div>
+         The usage of CCM FIR is negotiated with the peer.
+         </div>
+
+        @field Negotiated
+        @type {fm.liveswitch.CcmFirPolicy}
+        */
+        Negotiated = 2
+    }
+}
+declare namespace fm.liveswitch {
+    /**
+     <div>
+     The NACK PLI policy.
+     </div>
+
+    */
+    enum NackPliPolicy {
+        /** <span id='prop-fm.liveswitch.NackPliPolicy-Disabled'>&nbsp;</span> **/
+        /**
+         <div>
+         The usage of NACK PLI is disabled.
+         </div>
+
+        @field Disabled
+        @type {fm.liveswitch.NackPliPolicy}
+        */
+        Disabled = 1,
+        /** <span id='prop-fm.liveswitch.NackPliPolicy-Negotiated'>&nbsp;</span> **/
+        /**
+         <div>
+         The usage of NACK PLI is negotiated with the peer.
+         </div>
+
+        @field Negotiated
+        @type {fm.liveswitch.NackPliPolicy}
+        */
+        Negotiated = 2
     }
 }
 declare namespace fm.liveswitch {
@@ -9198,7 +9303,7 @@ declare namespace fm.liveswitch {
         @field ConnectivityLost
         @type {fm.liveswitch.CandidatePairState}
         */
-        ConnectivityLost = 7,
+        ConnectivityLost = 7
     }
 }
 declare namespace fm.liveswitch {
@@ -9275,7 +9380,7 @@ declare namespace fm.liveswitch {
         @field Unknown
         @type {fm.liveswitch.CandidateType}
         */
-        Unknown = 5,
+        Unknown = 5
     }
 }
 declare namespace fm.liveswitch {
@@ -9305,7 +9410,7 @@ declare namespace fm.liveswitch {
         @field Decode
         @type {fm.liveswitch.CodecType}
         */
-        Decode = 2,
+        Decode = 2
     }
 }
 declare namespace fm.liveswitch {
@@ -9395,7 +9500,7 @@ declare namespace fm.liveswitch {
         @field Closed
         @type {fm.liveswitch.ConnectionState}
         */
-        Closed = 8,
+        Closed = 8
     }
 }
 declare namespace fm.liveswitch {
@@ -9465,7 +9570,7 @@ declare namespace fm.liveswitch {
         @field Failed
         @type {fm.liveswitch.DataChannelState}
         */
-        Failed = 6,
+        Failed = 6
     }
 }
 declare namespace fm.liveswitch {
@@ -9525,7 +9630,7 @@ declare namespace fm.liveswitch {
         @field NullWeak
         @type {fm.liveswitch.EncryptionMode}
         */
-        NullWeak = 5,
+        NullWeak = 5
     }
 }
 declare namespace fm.liveswitch {
@@ -9565,7 +9670,7 @@ declare namespace fm.liveswitch {
         @field Disabled
         @type {fm.liveswitch.EncryptionPolicy}
         */
-        Disabled = 3,
+        Disabled = 3
     }
 }
 declare namespace fm.liveswitch {
@@ -9645,7 +9750,7 @@ declare namespace fm.liveswitch {
         @field Closed
         @type {fm.liveswitch.IceConnectionState}
         */
-        Closed = 7,
+        Closed = 7
     }
 }
 declare namespace fm.liveswitch {
@@ -9715,7 +9820,7 @@ declare namespace fm.liveswitch {
         @field Failed
         @type {fm.liveswitch.IceGatheringState}
         */
-        Failed = 6,
+        Failed = 6
     }
 }
 declare namespace fm.liveswitch {
@@ -9755,7 +9860,7 @@ declare namespace fm.liveswitch {
         @field Relay
         @type {fm.liveswitch.IceGatherPolicy}
         */
-        Relay = 3,
+        Relay = 3
     }
 }
 declare namespace fm.liveswitch {
@@ -9855,7 +9960,7 @@ declare namespace fm.liveswitch {
         @field BottomRight
         @type {fm.liveswitch.LayoutAlignment}
         */
-        BottomRight = 9,
+        BottomRight = 9
     }
 }
 declare namespace fm.liveswitch {
@@ -9887,7 +9992,7 @@ declare namespace fm.liveswitch {
         @field Vertical
         @type {fm.liveswitch.LayoutDirection}
         */
-        Vertical = 2,
+        Vertical = 2
     }
 }
 declare namespace fm.liveswitch {
@@ -9941,7 +10046,7 @@ declare namespace fm.liveswitch {
         @field Inline
         @type {fm.liveswitch.LayoutMode}
         */
-        Inline = 4,
+        Inline = 4
     }
 }
 declare namespace fm.liveswitch {
@@ -9991,7 +10096,7 @@ declare namespace fm.liveswitch {
         @field BottomLeft
         @type {fm.liveswitch.LayoutOrigin}
         */
-        BottomLeft = 4,
+        BottomLeft = 4
     }
 }
 declare namespace fm.liveswitch {
@@ -10040,7 +10145,7 @@ declare namespace fm.liveswitch {
         @field Stretch
         @type {fm.liveswitch.LayoutScale}
         */
-        Stretch = 3,
+        Stretch = 3
     }
 }
 declare namespace fm.liveswitch {
@@ -10120,7 +10225,7 @@ declare namespace fm.liveswitch {
         @field Destroyed
         @type {fm.liveswitch.LocalMediaState}
         */
-        Destroyed = 7,
+        Destroyed = 7
     }
 }
 declare namespace fm.liveswitch {
@@ -10128,6 +10233,13 @@ declare namespace fm.liveswitch {
      <div>
      The local policy for the use of generic RTP Negative Acknowledgements (NACK).
      Cf. https://tools.ietf.org/html/draft-ietf-rtcweb-rtp-usage-26
+ 
+     NackPolicy is for enabling/configuring negative acknowledgement.
+     Negative acknowledgements are used by media receivers to request that a media sender retransmit a packet.
+     It is highly effective for video in low-latency networks since video is stateful and the cost of losing a packet is high.
+     It is far less effective for audio, where any delay is especially harmful and the cost of losing a packet is not significant. Because of this,
+     it is enabled by default for video and disabled by default for audio. You can modify the buffer size using NackConfig, but generally,
+     it should be left with default values. The option to set these values will most likely be removed in a future release as our adaptive algorithms improve.
      </div>
 
     */
@@ -10151,7 +10263,7 @@ declare namespace fm.liveswitch {
         @field Negotiated
         @type {fm.liveswitch.NackPolicy}
         */
-        Negotiated = 2,
+        Negotiated = 2
     }
 }
 declare namespace fm.liveswitch {
@@ -10201,7 +10313,7 @@ declare namespace fm.liveswitch {
         @field Unknown
         @type {fm.liveswitch.ProtocolType}
         */
-        Unknown = 4,
+        Unknown = 4
     }
 }
 declare namespace fm.liveswitch {
@@ -10209,6 +10321,12 @@ declare namespace fm.liveswitch {
      <div>
      The local policy for the RED Forward Error Correction support.
      Cf. https://tools.ietf.org/html/draft-ietf-rtcweb-fec-04
+ 
+     RedFecPolicy is for enabling/configuring forward error correction.
+     Forward error correction adds redundancy to the media stream (increased bandwidth)
+     with the intention that media receivers can recover from packet loss without requiring the media server to retransmit anything.
+     It is a last resort for high latency networks.
+     It is disabled by default and not currently supported as it does not have sufficient test coverage.
      </div>
 
     */
@@ -10232,7 +10350,7 @@ declare namespace fm.liveswitch {
         @field Negotiated
         @type {fm.liveswitch.RedFecPolicy}
         */
-        Negotiated = 2,
+        Negotiated = 2
     }
 }
 declare namespace fm.liveswitch {
@@ -10263,7 +10381,7 @@ declare namespace fm.liveswitch {
         @field Negotiated
         @type {fm.liveswitch.RembPolicy}
         */
-        Negotiated = 2,
+        Negotiated = 2
     }
 }
 declare namespace fm.liveswitch {
@@ -10293,7 +10411,7 @@ declare namespace fm.liveswitch {
         @field Disabled
         @type {fm.liveswitch.SdesPolicy}
         */
-        Disabled = 3,
+        Disabled = 3
     }
 }
 declare namespace fm.liveswitch.sdp {
@@ -10663,7 +10781,7 @@ declare namespace fm.liveswitch.sdp {
         @field SctpMaxMessageSizeAttribute
         @type {fm.liveswitch.sdp.AttributeType}
         */
-        SctpMaxMessageSizeAttribute = 35,
+        SctpMaxMessageSizeAttribute = 35
     }
 }
 declare namespace fm.liveswitch.sdp.ice {
@@ -10693,7 +10811,7 @@ declare namespace fm.liveswitch.sdp.ice {
         @field Trickle
         @type {fm.liveswitch.sdp.ice.OptionTagType}
         */
-        Trickle = 2,
+        Trickle = 2
     }
 }
 declare namespace fm.liveswitch.sdp {
@@ -10713,7 +10831,7 @@ declare namespace fm.liveswitch.sdp {
         @field Wms
         @type {fm.liveswitch.sdp.MediaStreamIdSemanticToken}
         */
-        Wms = 1,
+        Wms = 1
     }
 }
 declare namespace fm.liveswitch {
@@ -10743,7 +10861,7 @@ declare namespace fm.liveswitch {
         @field Answer
         @type {fm.liveswitch.SessionDescriptionType}
         */
-        Answer = 2,
+        Answer = 2
     }
 }
 declare namespace fm.liveswitch {
@@ -10793,7 +10911,7 @@ declare namespace fm.liveswitch {
         @field Stable
         @type {fm.liveswitch.SignallingState}
         */
-        Stable = 4,
+        Stable = 4
     }
 }
 declare namespace fm.liveswitch {
@@ -10853,7 +10971,7 @@ declare namespace fm.liveswitch {
         @field Unset
         @type {fm.liveswitch.StreamDirection}
         */
-        Unset = 5,
+        Unset = 5
     }
 }
 declare namespace fm.liveswitch {
@@ -10943,7 +11061,7 @@ declare namespace fm.liveswitch {
         @field Closed
         @type {fm.liveswitch.StreamState}
         */
-        Closed = 8,
+        Closed = 8
     }
 }
 declare namespace fm.liveswitch {
@@ -11003,7 +11121,7 @@ declare namespace fm.liveswitch {
         @field Text
         @type {fm.liveswitch.StreamType}
         */
-        Text = 5,
+        Text = 5
     }
 }
 declare namespace fm.liveswitch {
@@ -11060,7 +11178,7 @@ declare namespace fm.liveswitch {
         @field HalfTrickle
         @type {fm.liveswitch.TrickleIcePolicy}
         */
-        HalfTrickle = 3,
+        HalfTrickle = 3
     }
 }
 declare namespace fm.liveswitch {
@@ -11090,7 +11208,7 @@ declare namespace fm.liveswitch {
         @field Answerer
         @type {fm.liveswitch.PeerRole}
         */
-        Answerer = 2,
+        Answerer = 2
     }
 }
 declare namespace fm.liveswitch {
@@ -11150,7 +11268,7 @@ declare namespace fm.liveswitch {
         @field Unregistered
         @type {fm.liveswitch.ClientState}
         */
-        Unregistered = 5,
+        Unregistered = 5
     }
 }
 declare namespace fm.liveswitch {
@@ -11302,7 +11420,7 @@ declare namespace fm.liveswitch {
         @field AlreadyInvited
         @type {fm.liveswitch.InvitationState}
         */
-        AlreadyInvited = 13,
+        AlreadyInvited = 13
     }
 }
 declare namespace fm.liveswitch {
@@ -11365,6 +11483,52 @@ declare namespace fm.liveswitch {
         @return {number}
         */
         static getByteCount(input: string): number;
+    }
+}
+declare namespace fm.liveswitch {
+    /**
+     <div>
+     ILog interface for loggers.
+     </div>
+
+    */
+    interface ILog {
+        debug(scope: string, message: string): void;
+        debug(message: string, ex: fm.liveswitch.Exception): void;
+        debug(message: string): void;
+        debug(scope: string, message: string, ex: fm.liveswitch.Exception): void;
+        error(scope: string, message: string, ex: fm.liveswitch.Exception): void;
+        error(scope: string, message: string): void;
+        error(message: string, ex: fm.liveswitch.Exception): void;
+        error(message: string): void;
+        fatal(scope: string, message: string, ex: fm.liveswitch.Exception): void;
+        fatal(message: string, ex: fm.liveswitch.Exception): void;
+        fatal(message: string): void;
+        fatal(scope: string, message: string): void;
+        flush(): void;
+        getIsDebugEnabled(): boolean;
+        getIsErrorEnabled(): boolean;
+        getIsFatalEnabled(): boolean;
+        getIsInfoEnabled(): boolean;
+        getIsVerboseEnabled(): boolean;
+        getIsWarnEnabled(): boolean;
+        getTag(): string;
+        info(scope: string, message: string, ex: fm.liveswitch.Exception): void;
+        info(message: string, ex: fm.liveswitch.Exception): void;
+        info(scope: string, message: string): void;
+        info(message: string): void;
+        isLogEnabled(level: fm.liveswitch.LogLevel): boolean;
+        log(message: string): void;
+        log(scope: string, message: string): void;
+        log(logEvent: fm.liveswitch.LogEvent): void;
+        verbose(message: string, ex: fm.liveswitch.Exception): void;
+        verbose(scope: string, message: string): void;
+        verbose(message: string): void;
+        verbose(scope: string, message: string, ex: fm.liveswitch.Exception): void;
+        warn(message: string): void;
+        warn(scope: string, message: string, ex: fm.liveswitch.Exception): void;
+        warn(message: string, ex: fm.liveswitch.Exception): void;
+        warn(scope: string, message: string): void;
     }
 }
 declare namespace fm.liveswitch {
@@ -13221,7 +13385,7 @@ declare namespace fm.liveswitch {
     */
     class BooleanHolder {
         getTypeString(): string;
-        private fmliveswitchBooleanHolderInit();
+        private fmliveswitchBooleanHolderInit;
         /**<span id='method-fm.liveswitch.BooleanHolder-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -13386,7 +13550,7 @@ declare namespace fm.liveswitch {
     */
     class ByteHolder {
         getTypeString(): string;
-        private fmliveswitchByteHolderInit();
+        private fmliveswitchByteHolderInit;
         /**<span id='method-fm.liveswitch.ByteHolder-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -13439,7 +13603,7 @@ declare namespace fm.liveswitch {
     */
     class CharacterHolder {
         getTypeString(): string;
-        private fmliveswitchCharacterHolderInit();
+        private fmliveswitchCharacterHolderInit;
         /**<span id='method-fm.liveswitch.CharacterHolder-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -13492,7 +13656,7 @@ declare namespace fm.liveswitch {
     */
     class CircularBuffer {
         getTypeString(): string;
-        private fmliveswitchCircularBufferInit();
+        private fmliveswitchCircularBufferInit;
         /**<span id='method-fm.liveswitch.CircularBuffer-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -13607,7 +13771,7 @@ declare namespace fm.liveswitch {
     */
     class DiagnosticSampler {
         getTypeString(): string;
-        private fmliveswitchDiagnosticSamplerInit();
+        private fmliveswitchDiagnosticSamplerInit;
         /**<span id='method-fm.liveswitch.DiagnosticSampler-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -13701,6 +13865,48 @@ declare namespace fm.liveswitch {
     }
 }
 declare namespace fm.liveswitch {
+    /**
+     <div>
+     Utility class to assist with ISO-8601 timestamp conversions.
+     </div>
+
+    */
+    class Iso8601Timestamp {
+        getTypeString(): string;
+        constructor();
+        /**<span id='method-fm.liveswitch.Iso8601Timestamp-dateTimeToIso8601'>&nbsp;</span>**/
+        /**
+         <div>
+         Converts a date to a ISO-8601 timestamp.
+         </div>
+
+        @param {fm.liveswitch.DateTime} dateTime The date to convert.
+        @return {string} The equivalent ISO-8601 timestamp.
+        */
+        static dateTimeToIso8601(dateTime: fm.liveswitch.DateTime): string;
+        /**<span id='method-fm.liveswitch.Iso8601Timestamp-getUtcNow'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the current UTC time in ISO-8601 format.
+         </div>
+
+
+        @return {string}
+        */
+        static getUtcNow(): string;
+        /**<span id='method-fm.liveswitch.Iso8601Timestamp-iso8601ToDateTime'>&nbsp;</span>**/
+        /**
+         <div>
+         Converts a ISO-8601 timestamp to a date.
+         </div>
+
+        @param {string} iso8601 The ISO-8601 timestamp to convert.
+        @return {fm.liveswitch.DateTime} The equivalent date.
+        */
+        static iso8601ToDateTime(iso8601: string): fm.liveswitch.DateTime;
+    }
+}
+declare namespace fm.liveswitch {
 }
 declare namespace fm.liveswitch {
     /**
@@ -13714,17 +13920,7 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.ManagedCountdownLatch-constructor'>&nbsp;</span>**/
         /**
          <div>
-         Creates a new instance of the Latch with an count.
-         </div>
-
-        @param {number} initialCount The count to start the latch at.
-        @return {}
-        */
-        constructor(initialCount: number);
-        /**<span id='method-fm.liveswitch.ManagedCountdownLatch-constructor'>&nbsp;</span>**/
-        /**
-         <div>
-         Creates a new instance of the Latch with an unknown count.
+         Creates a new instance of the latch with an unknown count.
          This will cause the latch to count into the negatives until SetCount is called.
          </div>
 
@@ -13732,6 +13928,16 @@ declare namespace fm.liveswitch {
         @return {}
         */
         constructor();
+        /**<span id='method-fm.liveswitch.ManagedCountdownLatch-constructor'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a new instance of the latch with a count.
+         </div>
+
+        @param {number} initialCount The initial counter value.
+        @return {}
+        */
+        constructor(initialCount: number);
         /**<span id='method-fm.liveswitch.ManagedCountdownLatch-decrement'>&nbsp;</span>**/
         /**
          <div>
@@ -13752,6 +13958,27 @@ declare namespace fm.liveswitch {
         @return {number}
         */
         getCount(): number;
+        /**<span id='method-fm.liveswitch.ManagedCountdownLatch-reset'>&nbsp;</span>**/
+        /**
+         <div>
+         Resets the latch with an unknown count.
+         This will cause the latch to count into the negatives until SetCount is called.
+         </div>
+
+
+        @return {void}
+        */
+        reset(): void;
+        /**<span id='method-fm.liveswitch.ManagedCountdownLatch-reset'>&nbsp;</span>**/
+        /**
+         <div>
+         Resets the latch with a count.
+         </div>
+
+        @param {number} initialCount The initial counter value.
+        @return {void}
+        */
+        reset(initialCount: number): void;
         /**<span id='method-fm.liveswitch.ManagedCountdownLatch-setCount'>&nbsp;</span>**/
         /**
          <div>
@@ -13764,6 +13991,15 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         setCount(count: number): void;
+        /**<span id='method-fm.liveswitch.ManagedCountdownLatch-toString'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a string description of this instance.
+         </div>
+
+        @return {string}
+        */
+        toString(): string;
         /**<span id='method-fm.liveswitch.ManagedCountdownLatch-waitAsync'>&nbsp;</span>**/
         /**
          <div>
@@ -13798,7 +14034,7 @@ declare namespace fm.liveswitch {
     */
     class Pool<T> {
         getTypeString(): string;
-        private fmliveswitchPoolInit();
+        private fmliveswitchPoolInit;
         /**<span id='method-fm.liveswitch.Pool-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -14434,7 +14670,7 @@ declare namespace fm.liveswitch {
     */
     abstract class StateMachine<T> {
         getTypeString(): string;
-        private fmliveswitchStateMachineInit();
+        private fmliveswitchStateMachineInit;
         /**<span id='method-fm.liveswitch.StateMachine-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -14615,7 +14851,7 @@ declare namespace fm.liveswitch {
     */
     class LinkedListEnumerator<T> {
         getTypeString(): string;
-        private fmliveswitchLinkedListEnumeratorInit();
+        private fmliveswitchLinkedListEnumeratorInit;
         /**<span id='method-fm.liveswitch.LinkedListEnumerator-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -14701,6 +14937,17 @@ declare namespace fm.liveswitch {
         @return {}
         */
         constructor();
+        /**<span id='method-fm.liveswitch.ManagedConcurrentDictionary-addOrUpdate'>&nbsp;</span>**/
+        /**
+         <div>
+         Updates a value in the dictionary or adds it if it does not exist.
+         </div>
+
+        @param {TKey} key The key to use for updating for adding.
+        @param {TValue} addValue The value to be added for an absent key.
+        @return {TValue}
+        */
+        addOrUpdate(key: TKey, addValue: TValue): TValue;
         /**<span id='method-fm.liveswitch.ManagedConcurrentDictionary-addOrUpdate'>&nbsp;</span>**/
         /**
          <div>
@@ -14806,6 +15053,16 @@ declare namespace fm.liveswitch {
         @return {boolean} True if succeeded.
         */
         tryGetValue(key: TKey, value: fm.liveswitch.Holder<TValue>): boolean;
+        /**<span id='method-fm.liveswitch.ManagedConcurrentDictionary-tryRemove'>&nbsp;</span>**/
+        /**
+         <div>
+         Tries and removes a value from the dictionary.
+         </div>
+
+        @param {TKey} key The key of the item to remove.
+        @return {boolean} True if successful.
+        */
+        tryRemove(key: TKey): boolean;
         /**<span id='method-fm.liveswitch.ManagedConcurrentDictionary-tryRemove'>&nbsp;</span>**/
         /**
          <div>
@@ -15413,7 +15670,7 @@ declare namespace fm.liveswitch {
     */
     class DataBufferStream {
         getTypeString(): string;
-        private fmliveswitchDataBufferStreamInit();
+        private fmliveswitchDataBufferStreamInit;
         /**<span id='method-fm.liveswitch.DataBufferStream-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -15790,7 +16047,7 @@ declare namespace fm.liveswitch {
     */
     class DataBuffer {
         getTypeString(): string;
-        private fmliveswitchDataBufferInit();
+        private fmliveswitchDataBufferInit;
         constructor();
         constructor(data: Uint8Array, index: number, length: number, littleEndian: boolean);
         /**<span id='method-fm.liveswitch.DataBuffer-allocate'>&nbsp;</span>**/
@@ -18126,23 +18383,70 @@ declare namespace fm.liveswitch {
 declare namespace fm.liveswitch {
     /**
      <div>
-     LogItem class that contains the log event details.
+     Details about a specific log event.
      </div>
 
     */
     class LogEvent {
         getTypeString(): string;
-        private fmliveswitchLogEventInit();
+        private fmliveswitchLogEventInit;
+        constructor();
+        /**<span id='method-fm.liveswitch.LogEvent-constructor'>&nbsp;</span>**/
+        /**
+         <div>
+         Initializes a new instance of the `fm.liveswitch.logEvent` class.
+         </div>
+
+        @param {fm.liveswitch.DateTime} timestamp The event timestamp.
+        @param {string} tag The event tag.
+        @param {string} scope The event scope.
+        @param {fm.liveswitch.LogLevel} level The event level.
+        @param {string} message The event message.
+        @param {fm.liveswitch.Exception} exception The event exception, if one exists.
+        @param {number} threadId The ID of the thread generating the event.
+        @return {}
+        */
+        constructor(timestamp: fm.liveswitch.DateTime, tag: string, scope: string, level: fm.liveswitch.LogLevel, message: string, exception: fm.liveswitch.Exception, threadId: number);
+        /**<span id='method-fm.liveswitch.LogEvent-fromJson'>&nbsp;</span>**/
+        /**
+         <div>
+         Deserializes a log event from JSON.
+         </div>
+
+        @param {string} logEventJson The log event JSON.
+        @return {fm.liveswitch.LogEvent}
+        */
+        static fromJson(logEventJson: string): fm.liveswitch.LogEvent;
+        /**<span id='method-fm.liveswitch.LogEvent-toJson'>&nbsp;</span>**/
+        /**
+         <div>
+         Serializes a log event to JSON.
+         </div>
+
+        @param {fm.liveswitch.LogEvent} logEvent The log event.
+        @return {string}
+        */
+        static toJson(logEvent: fm.liveswitch.LogEvent): string;
         /**<span id='method-fm.liveswitch.LogEvent-getException'>&nbsp;</span>**/
         /**
          <div>
-         Gets the exception if one exists for this log event.
+         Gets the event exception, if one exists.
          </div>
 
 
         @return {fm.liveswitch.Exception}
         */
         getException(): fm.liveswitch.Exception;
+        /**<span id='method-fm.liveswitch.LogEvent-getLevel'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the event level.
+         </div>
+
+
+        @return {fm.liveswitch.LogLevel}
+        */
+        getLevel(): fm.liveswitch.LogLevel;
         /**<span id='method-fm.liveswitch.LogEvent-getLogLevel'>&nbsp;</span>**/
         /**
          <div>
@@ -18156,7 +18460,7 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.LogEvent-getMessage'>&nbsp;</span>**/
         /**
          <div>
-         Gets the log message.
+         Gets the event message.
          </div>
 
 
@@ -18166,7 +18470,7 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.LogEvent-getScope'>&nbsp;</span>**/
         /**
          <div>
-         Gets the scope of this log event.
+         Gets the event scope.
          </div>
 
 
@@ -18176,7 +18480,7 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.LogEvent-getTag'>&nbsp;</span>**/
         /**
          <div>
-         Gets the tag of this log event.
+         Gets the event tag.
          </div>
 
 
@@ -18186,23 +18490,109 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.LogEvent-getThreadId'>&nbsp;</span>**/
         /**
          <div>
-         Gets the id of the thread this log event occurred on.
+         Gets the ID of the thread generating the event.
          </div>
 
 
         @return {number}
         */
         getThreadId(): number;
-        /**<span id='method-fm.liveswitch.LogEvent-getTimeStamp'>&nbsp;</span>**/
+        /**<span id='method-fm.liveswitch.LogEvent-getTimestamp'>&nbsp;</span>**/
         /**
          <div>
-         Gets the timestamp when this log event occurred.
+         Gets the event timestamp.
          </div>
 
 
         @return {fm.liveswitch.DateTime}
         */
-        getTimeStamp(): fm.liveswitch.DateTime;
+        getTimestamp(): fm.liveswitch.DateTime;
+        /**<span id='method-fm.liveswitch.LogEvent-setException'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the event exception, if one exists.
+         </div>
+
+
+        @param {fm.liveswitch.Exception} value
+        @return {void}
+        */
+        setException(value: fm.liveswitch.Exception): void;
+        /**<span id='method-fm.liveswitch.LogEvent-setLevel'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the event level.
+         </div>
+
+
+        @param {fm.liveswitch.LogLevel} value
+        @return {void}
+        */
+        setLevel(value: fm.liveswitch.LogLevel): void;
+        /**<span id='method-fm.liveswitch.LogEvent-setMessage'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the event message.
+         </div>
+
+
+        @param {string} value
+        @return {void}
+        */
+        setMessage(value: string): void;
+        /**<span id='method-fm.liveswitch.LogEvent-setScope'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the event scope.
+         </div>
+
+
+        @param {string} value
+        @return {void}
+        */
+        setScope(value: string): void;
+        /**<span id='method-fm.liveswitch.LogEvent-setTag'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the event tag.
+         </div>
+
+
+        @param {string} value
+        @return {void}
+        */
+        setTag(value: string): void;
+        /**<span id='method-fm.liveswitch.LogEvent-setThreadId'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the ID of the thread generating the event.
+         </div>
+
+
+        @param {number} value
+        @return {void}
+        */
+        setThreadId(value: number): void;
+        /**<span id='method-fm.liveswitch.LogEvent-setTimestamp'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the event timestamp.
+         </div>
+
+
+        @param {fm.liveswitch.DateTime} value
+        @return {void}
+        */
+        setTimestamp(value: fm.liveswitch.DateTime): void;
+        /**<span id='method-fm.liveswitch.LogEvent-toJson'>&nbsp;</span>**/
+        /**
+         <div>
+         Serializes this instance to JSON.
+         </div>
+
+        @return {string}
+        */
+        toJson(): string;
     }
 }
 declare namespace fm.liveswitch {
@@ -18252,7 +18642,7 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.UnixTimestamp-getUtcNow'>&nbsp;</span>**/
         /**
          <div>
-         Gets the current UTC time in NTP format.
+         Gets the current UTC time in Unix format.
          </div>
 
 
@@ -18330,7 +18720,7 @@ declare namespace fm.liveswitch {
     */
     class DoubleHolder {
         getTypeString(): string;
-        private fmliveswitchDoubleHolderInit();
+        private fmliveswitchDoubleHolderInit;
         /**<span id='method-fm.liveswitch.DoubleHolder-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -18507,7 +18897,7 @@ declare namespace fm.liveswitch {
     */
     class FloatHolder {
         getTypeString(): string;
-        private fmliveswitchFloatHolderInit();
+        private fmliveswitchFloatHolderInit;
         /**<span id='method-fm.liveswitch.FloatHolder-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -18567,7 +18957,7 @@ declare namespace fm.liveswitch {
     */
     class HttpRequestArgs extends fm.liveswitch.Dynamic {
         getTypeString(): string;
-        private fmliveswitchHttpRequestArgsInit();
+        private fmliveswitchHttpRequestArgsInit;
         /**<span id='method-fm.liveswitch.HttpRequestArgs-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -18862,7 +19252,7 @@ declare namespace fm.liveswitch {
     */
     class HttpResponseArgs {
         getTypeString(): string;
-        private fmliveswitchHttpResponseArgsInit();
+        private fmliveswitchHttpResponseArgsInit;
         constructor();
         /**<span id='method-fm.liveswitch.HttpResponseArgs-constructor'>&nbsp;</span>**/
         /**
@@ -19232,7 +19622,7 @@ declare namespace fm.liveswitch {
     */
     class HttpWebRequestSender extends fm.liveswitch.Dynamic {
         getTypeString(): string;
-        private fmliveswitchHttpWebRequestSenderInit();
+        private fmliveswitchHttpWebRequestSenderInit;
         constructor();
         /**<span id='method-fm.liveswitch.HttpWebRequestSender-getDisableCors'>&nbsp;</span>**/
         /**
@@ -19323,58 +19713,13 @@ declare namespace fm.liveswitch {
 declare namespace fm.liveswitch {
     /**
      <div>
-     ILog interface for loggers.
-     </div>
-
-    */
-    interface ILog {
-        debug(scope: string, message: string): void;
-        debug(message: string, ex: fm.liveswitch.Exception): void;
-        debug(message: string): void;
-        debug(scope: string, message: string, ex: fm.liveswitch.Exception): void;
-        error(scope: string, message: string, ex: fm.liveswitch.Exception): void;
-        error(scope: string, message: string): void;
-        error(message: string, ex: fm.liveswitch.Exception): void;
-        error(message: string): void;
-        fatal(scope: string, message: string, ex: fm.liveswitch.Exception): void;
-        fatal(message: string, ex: fm.liveswitch.Exception): void;
-        fatal(message: string): void;
-        fatal(scope: string, message: string): void;
-        flush(): void;
-        getIsDebugEnabled(): boolean;
-        getIsErrorEnabled(): boolean;
-        getIsFatalEnabled(): boolean;
-        getIsInfoEnabled(): boolean;
-        getIsVerboseEnabled(): boolean;
-        getIsWarnEnabled(): boolean;
-        getTag(): string;
-        info(scope: string, message: string, ex: fm.liveswitch.Exception): void;
-        info(message: string, ex: fm.liveswitch.Exception): void;
-        info(scope: string, message: string): void;
-        info(message: string): void;
-        isLogEnabled(level: fm.liveswitch.LogLevel): boolean;
-        log(scope: string, message: string): void;
-        log(message: string): void;
-        verbose(scope: string, message: string): void;
-        verbose(message: string, ex: fm.liveswitch.Exception): void;
-        verbose(message: string): void;
-        verbose(scope: string, message: string, ex: fm.liveswitch.Exception): void;
-        warn(scope: string, message: string, ex: fm.liveswitch.Exception): void;
-        warn(scope: string, message: string): void;
-        warn(message: string, ex: fm.liveswitch.Exception): void;
-        warn(message: string): void;
-    }
-}
-declare namespace fm.liveswitch {
-    /**
-     <div>
      Class to hold an integer value passed by reference.
      </div>
 
     */
     class IntegerHolder {
         getTypeString(): string;
-        private fmliveswitchIntegerHolderInit();
+        private fmliveswitchIntegerHolderInit;
         /**<span id='method-fm.liveswitch.IntegerHolder-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -19555,6 +19900,40 @@ declare namespace fm.liveswitch {
     class Log {
         getTypeString(): string;
         constructor();
+        /**<span id='method-fm.liveswitch.Log-addProvider'>&nbsp;</span>**/
+        /**
+         <div>
+         Registers a log provider as a logging target.
+         Alias for RegisterProvider.
+         </div>
+
+        @param {fm.liveswitch.LogProvider} provider The new provider.
+        @return {void}
+        */
+        static addProvider(provider: fm.liveswitch.LogProvider): void;
+        /**<span id='method-fm.liveswitch.Log-addProvider'>&nbsp;</span>**/
+        /**
+         <div>
+         Registers a log provider as a logging target,
+         setting its log level in the process.
+         Alias for RegisterProvider.
+         </div>
+
+        @param {fm.liveswitch.LogProvider} provider The new provider.
+        @param {fm.liveswitch.LogLevel} level The log level.
+        @return {void}
+        */
+        static addProvider(provider: fm.liveswitch.LogProvider, level: fm.liveswitch.LogLevel): void;
+        /**<span id='method-fm.liveswitch.Log-debug'>&nbsp;</span>**/
+        /**
+         <div>
+         Logs a debug-level message.
+         </div>
+
+        @param {string} message The message.
+        @return {void}
+        */
+        static debug(message: string): void;
         /**<span id='method-fm.liveswitch.Log-debug'>&nbsp;</span>**/
         /**
          <div>
@@ -19566,16 +19945,6 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         static debug(message: string, ex: fm.liveswitch.Exception): void;
-        /**<span id='method-fm.liveswitch.Log-debug'>&nbsp;</span>**/
-        /**
-         <div>
-         Logs a debug-level message.
-         </div>
-
-        @param {string} message The message.
-        @return {void}
-        */
-        static debug(message: string): void;
         /**<span id='method-fm.liveswitch.Log-error'>&nbsp;</span>**/
         /**
          <div>
@@ -19604,10 +19973,9 @@ declare namespace fm.liveswitch {
          </div>
 
         @param {string} message The message.
-        @param {fm.liveswitch.Exception} ex The exception.
         @return {void}
         */
-        static fatal(message: string, ex: fm.liveswitch.Exception): void;
+        static fatal(message: string): void;
         /**<span id='method-fm.liveswitch.Log-fatal'>&nbsp;</span>**/
         /**
          <div>
@@ -19615,9 +19983,10 @@ declare namespace fm.liveswitch {
          </div>
 
         @param {string} message The message.
+        @param {fm.liveswitch.Exception} ex The exception.
         @return {void}
         */
-        static fatal(message: string): void;
+        static fatal(message: string, ex: fm.liveswitch.Exception): void;
         /**<span id='method-fm.liveswitch.Log-flush'>&nbsp;</span>**/
         /**
          <div>
@@ -19703,26 +20072,6 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.Log-getLogger'>&nbsp;</span>**/
         /**
          <div>
-         Get a logger for a specific Tag. The tag is taken from the class namespace and name.
-         </div>
-
-        @param {fm.liveswitch.Type} type The type to use as the tag.
-        @return {fm.liveswitch.ILog} A ILog that will log to the specified tag.
-        */
-        static getLogger(type: fm.liveswitch.Type): fm.liveswitch.ILog;
-        /**<span id='method-fm.liveswitch.Log-getLogger'>&nbsp;</span>**/
-        /**
-         <div>
-         Get a logger for a specific Tag.
-         </div>
-
-        @param {string} tag The tag to log to.
-        @return {fm.liveswitch.ILog} A ILog that will log to the specified tag.
-        */
-        static getLogger(tag: string): fm.liveswitch.ILog;
-        /**<span id='method-fm.liveswitch.Log-getLogger'>&nbsp;</span>**/
-        /**
-         <div>
          Get a logger for a specific Tag.  The tag is taken from the class namespace and name.
          </div>
 
@@ -19742,6 +20091,26 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.ILog} A ILog that will log to the specified tag.
         */
         static getLogger(tag: string, level: fm.liveswitch.LogLevel): fm.liveswitch.ILog;
+        /**<span id='method-fm.liveswitch.Log-getLogger'>&nbsp;</span>**/
+        /**
+         <div>
+         Get a logger for a specific Tag.
+         </div>
+
+        @param {string} tag The tag to log to.
+        @return {fm.liveswitch.ILog} A ILog that will log to the specified tag.
+        */
+        static getLogger(tag: string): fm.liveswitch.ILog;
+        /**<span id='method-fm.liveswitch.Log-getLogger'>&nbsp;</span>**/
+        /**
+         <div>
+         Get a logger for a specific Tag. The tag is taken from the class namespace and name.
+         </div>
+
+        @param {fm.liveswitch.Type} type The type to use as the tag.
+        @return {fm.liveswitch.ILog} A ILog that will log to the specified tag.
+        */
+        static getLogger(type: fm.liveswitch.Type): fm.liveswitch.ILog;
         /**<span id='method-fm.liveswitch.Log-getLogLevel'>&nbsp;</span>**/
         /**
          <div>
@@ -19762,6 +20131,26 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.LogProvider}
         */
         static getProvider(): fm.liveswitch.LogProvider;
+        /**<span id='method-fm.liveswitch.Log-getProviders'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the log providers.
+         </div>
+
+
+        @return {fm.liveswitch.LogProvider[]}
+        */
+        static getProviders(): fm.liveswitch.LogProvider[];
+        /**<span id='method-fm.liveswitch.Log-info'>&nbsp;</span>**/
+        /**
+         <div>
+         Logs an info-level message.
+         </div>
+
+        @param {string} message The message.
+        @return {void}
+        */
+        static info(message: string): void;
         /**<span id='method-fm.liveswitch.Log-info'>&nbsp;</span>**/
         /**
          <div>
@@ -19773,36 +20162,50 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         static info(message: string, ex: fm.liveswitch.Exception): void;
-        /**<span id='method-fm.liveswitch.Log-info'>&nbsp;</span>**/
-        /**
-         <div>
-         Logs an info-level message.
-         </div>
-
-        @param {string} message The message.
-        @return {void}
-        */
-        static info(message: string): void;
         /**<span id='method-fm.liveswitch.Log-registerProvider'>&nbsp;</span>**/
         /**
          <div>
-         Register a log provider to be logged to.
+         Registers a log provider as a logging target,
+         setting its log level in the process.
          </div>
 
-        @param {fm.liveswitch.LogProvider} provider The new provider.
+        @param {fm.liveswitch.LogProvider} provider The provider.
+        @param {fm.liveswitch.LogLevel} level The log level.
+        @return {void}
+        */
+        static registerProvider(provider: fm.liveswitch.LogProvider, level: fm.liveswitch.LogLevel): void;
+        /**<span id='method-fm.liveswitch.Log-registerProvider'>&nbsp;</span>**/
+        /**
+         <div>
+         Registers a log provider as a logging target.
+         </div>
+
+        @param {fm.liveswitch.LogProvider} provider The provider.
         @return {void}
         */
         static registerProvider(provider: fm.liveswitch.LogProvider): void;
         /**<span id='method-fm.liveswitch.Log-removeProvider'>&nbsp;</span>**/
         /**
          <div>
-         Removes a log provider from the list.
+         Unregisters a log provider as a logging target.
+         Alias for UnregisterProvider.
          </div>
 
-        @param {fm.liveswitch.LogProvider} provider The provider to remove.
+        @param {fm.liveswitch.LogProvider} provider The provider.
+        @return {boolean}
+        */
+        static removeProvider(provider: fm.liveswitch.LogProvider): boolean;
+        /**<span id='method-fm.liveswitch.Log-removeProviders'>&nbsp;</span>**/
+        /**
+         <div>
+         Unregisters all log providers as logging targets.
+         Alias for UnregisterProviders.
+         </div>
+
+
         @return {void}
         */
-        static removeProvider(provider: fm.liveswitch.LogProvider): void;
+        static removeProviders(): void;
         /**<span id='method-fm.liveswitch.Log-setLogLevel'>&nbsp;</span>**/
         /**
          <div>
@@ -19836,6 +20239,36 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         static setTagOverride(tag: string, level: fm.liveswitch.LogLevel): void;
+        /**<span id='method-fm.liveswitch.Log-unregisterProvider'>&nbsp;</span>**/
+        /**
+         <div>
+         Unregisters a log provider as a logging target.
+         </div>
+
+        @param {fm.liveswitch.LogProvider} provider The provider.
+        @return {boolean}
+        */
+        static unregisterProvider(provider: fm.liveswitch.LogProvider): boolean;
+        /**<span id='method-fm.liveswitch.Log-unregisterProviders'>&nbsp;</span>**/
+        /**
+         <div>
+         Unregisters all log providers as logging targets.
+         </div>
+
+
+        @return {void}
+        */
+        static unregisterProviders(): void;
+        /**<span id='method-fm.liveswitch.Log-verbose'>&nbsp;</span>**/
+        /**
+         <div>
+         Logs a verbose-level message.
+         </div>
+
+        @param {string} message The message.
+        @return {void}
+        */
+        static verbose(message: string): void;
         /**<span id='method-fm.liveswitch.Log-verbose'>&nbsp;</span>**/
         /**
          <div>
@@ -19847,16 +20280,16 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         static verbose(message: string, ex: fm.liveswitch.Exception): void;
-        /**<span id='method-fm.liveswitch.Log-verbose'>&nbsp;</span>**/
+        /**<span id='method-fm.liveswitch.Log-warn'>&nbsp;</span>**/
         /**
          <div>
-         Logs a verbose-level message.
+         Logs a warn-level message.
          </div>
 
         @param {string} message The message.
         @return {void}
         */
-        static verbose(message: string): void;
+        static warn(message: string): void;
         /**<span id='method-fm.liveswitch.Log-warn'>&nbsp;</span>**/
         /**
          <div>
@@ -19868,16 +20301,6 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         static warn(message: string, ex: fm.liveswitch.Exception): void;
-        /**<span id='method-fm.liveswitch.Log-warn'>&nbsp;</span>**/
-        /**
-         <div>
-         Logs a warn-level message.
-         </div>
-
-        @param {string} message The message.
-        @return {void}
-        */
-        static warn(message: string): void;
         /**<span id='method-fm.liveswitch.Log-writeLine'>&nbsp;</span>**/
         /**
          <div>
@@ -19908,7 +20331,7 @@ declare namespace fm.liveswitch {
     */
     class LongHolder {
         getTypeString(): string;
-        private fmliveswitchLongHolderInit();
+        private fmliveswitchLongHolderInit;
         /**<span id='method-fm.liveswitch.LongHolder-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -20004,10 +20427,10 @@ declare namespace fm.liveswitch {
          Logs a message at the specified log level.
          </div>
 
-        @param {fm.liveswitch.LogEvent} logItem The log event containing the details.
+        @param {fm.liveswitch.LogEvent} logEvent The log event details.
         @return {void}
         */
-        protected doLog(logItem: fm.liveswitch.LogEvent): void;
+        protected doLog(logEvent: fm.liveswitch.LogEvent): void;
     }
 }
 declare namespace fm.liveswitch {
@@ -20026,7 +20449,7 @@ declare namespace fm.liveswitch {
     */
     class ShortHolder {
         getTypeString(): string;
-        private fmliveswitchShortHolderInit();
+        private fmliveswitchShortHolderInit;
         /**<span id='method-fm.liveswitch.ShortHolder-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -20208,10 +20631,10 @@ declare namespace fm.liveswitch {
          Logs a message at the specified log level.
          </div>
 
-        @param {fm.liveswitch.LogEvent} logItem The log event containing the details.
+        @param {fm.liveswitch.LogEvent} logEvent The log event details.
         @return {void}
         */
-        protected doLog(logItem: fm.liveswitch.LogEvent): void;
+        protected doLog(logEvent: fm.liveswitch.LogEvent): void;
         /**<span id='method-fm.liveswitch.TextLogProvider-getCallback'>&nbsp;</span>**/
         /**
          <div>
@@ -20279,7 +20702,7 @@ declare namespace fm.liveswitch {
     */
     class UnhandledExceptionArgs {
         getTypeString(): string;
-        private fmliveswitchUnhandledExceptionArgsInit();
+        private fmliveswitchUnhandledExceptionArgsInit;
         /**<span id='method-fm.liveswitch.UnhandledExceptionArgs-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -20580,7 +21003,7 @@ declare namespace fm.liveswitch {
     */
     class WebSocketOpenArgs extends fm.liveswitch.Dynamic {
         getTypeString(): string;
-        private fmliveswitchWebSocketOpenArgsInit();
+        private fmliveswitchWebSocketOpenArgsInit;
         /**<span id='method-fm.liveswitch.WebSocketOpenArgs-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -21007,7 +21430,7 @@ declare namespace fm.liveswitch {
     */
     class WebSocketSendArgs extends fm.liveswitch.Dynamic {
         getTypeString(): string;
-        private fmliveswitchWebSocketSendArgsInit();
+        private fmliveswitchWebSocketSendArgsInit;
         /**<span id='method-fm.liveswitch.WebSocketSendArgs-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -21174,7 +21597,7 @@ declare namespace fm.liveswitch {
     */
     abstract class WebSocketTransfer {
         getTypeString(): string;
-        private fmliveswitchWebSocketTransferInit();
+        private fmliveswitchWebSocketTransferInit;
         /**<span id='method-fm.liveswitch.WebSocketTransfer-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -21533,7 +21956,7 @@ declare namespace fm.liveswitch {
     */
     class BaseAdvice extends fm.liveswitch.Serializable {
         getTypeString(): string;
-        private fmliveswitchBaseAdviceInit();
+        private fmliveswitchBaseAdviceInit;
         /**<span id='method-fm.liveswitch.BaseAdvice-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -22296,7 +22719,7 @@ declare namespace fm.liveswitch {
     */
     class Binding extends fm.liveswitch.Dynamic {
         getTypeString(): string;
-        private fmliveswitchBindingInit();
+        private fmliveswitchBindingInit;
         /**<span id='method-fm.liveswitch.Binding-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -22868,7 +23291,7 @@ declare namespace fm.liveswitch {
     */
     abstract class MessageBase extends fm.liveswitch.Extensible {
         getTypeString(): string;
-        private fmliveswitchMessageBaseInit();
+        private fmliveswitchMessageBaseInit;
         /**<span id='method-fm.liveswitch.MessageBase-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -23938,7 +24361,7 @@ declare namespace fm.liveswitch {
     */
     class MessageRequestArgs extends fm.liveswitch.Dynamic {
         getTypeString(): string;
-        private fmliveswitchMessageRequestArgsInit();
+        private fmliveswitchMessageRequestArgsInit;
         constructor();
         /**<span id='method-fm.liveswitch.MessageRequestArgs-constructor'>&nbsp;</span>**/
         /**
@@ -24966,7 +25389,7 @@ declare namespace fm.liveswitch {
     */
     class Record extends fm.liveswitch.Dynamic {
         getTypeString(): string;
-        private fmliveswitchRecordInit();
+        private fmliveswitchRecordInit;
         /**<span id='method-fm.liveswitch.Record-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -25924,7 +26347,7 @@ declare namespace fm.liveswitch {
     */
     abstract class MediaBuffer<TFormat extends fm.liveswitch.MediaFormat<TFormat>, TBuffer extends fm.liveswitch.MediaBuffer<TFormat, TBuffer>> extends fm.liveswitch.Dynamic {
         getTypeString(): string;
-        private fmliveswitchMediaBufferInit();
+        private fmliveswitchMediaBufferInit;
         /**<span id='method-fm.liveswitch.MediaBuffer-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -26006,6 +26429,17 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.DataBuffer[]}
         */
         getDataBuffers(): fm.liveswitch.DataBuffer[];
+        /**<span id='method-fm.liveswitch.MediaBuffer-getFootprint'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the approximate footprint of this media buffer
+         by returning the sum of its data buffer lengths.
+         </div>
+
+
+        @return {number}
+        */
+        getFootprint(): number;
         /**<span id='method-fm.liveswitch.MediaBuffer-getFormat'>&nbsp;</span>**/
         /**
          <div>
@@ -26060,7 +26494,7 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.MediaBuffer-getRtpHeaders'>&nbsp;</span>**/
         /**
          <div>
-         Gets the Rtp Packet Headers for this media buffer.
+         Gets the RTP Packet Headers for this media buffer.
          </div>
 
 
@@ -26197,7 +26631,7 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.MediaBuffer-setRtpHeaders'>&nbsp;</span>**/
         /**
          <div>
-         Sets the Rtp Packet Headers for this media buffer.
+         Sets the RTP Packet Headers for this media buffer.
          </div>
 
 
@@ -26550,9 +26984,9 @@ declare namespace fm.liveswitch {
          </div>
 
         @param {T[]} values The values.
-        @return {boolean}
+        @return {void}
         */
-        removeMany(values: T[]): boolean;
+        removeMany(values: T[]): void;
         /**<span id='method-fm.liveswitch.Collection-removeSuccess'>&nbsp;</span>**/
         /**
          <div>
@@ -26697,7 +27131,7 @@ declare namespace fm.liveswitch {
     */
     abstract class MediaConfig<TConfig extends fm.liveswitch.MediaConfig<TConfig>> {
         getTypeString(): string;
-        private fmliveswitchMediaConfigInit();
+        private fmliveswitchMediaConfigInit;
         /**<span id='method-fm.liveswitch.MediaConfig-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -26739,7 +27173,7 @@ declare namespace fm.liveswitch {
     */
     class AudioConfig extends fm.liveswitch.MediaConfig<fm.liveswitch.AudioConfig> {
         getTypeString(): string;
-        private fmliveswitchAudioConfigInit();
+        private fmliveswitchAudioConfigInit;
         /**<span id='method-fm.liveswitch.AudioConfig-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -26792,7 +27226,7 @@ declare namespace fm.liveswitch {
     */
     abstract class MediaFormat<TFormat extends fm.liveswitch.MediaFormat<TFormat>> {
         getTypeString(): string;
-        private fmliveswitchMediaFormatInit();
+        private fmliveswitchMediaFormatInit;
         /**<span id='method-fm.liveswitch.MediaFormat-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -26884,6 +27318,16 @@ declare namespace fm.liveswitch {
         @return {boolean}
         */
         getIsEncrypted(): boolean;
+        /**<span id='method-fm.liveswitch.MediaFormat-getIsFixedBitrate'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets a value indicating whether a format only supports fixed bitrate.
+         </div>
+
+
+        @return {boolean}
+        */
+        getIsFixedBitrate(): boolean;
         /**<span id='method-fm.liveswitch.MediaFormat-getIsInjected'>&nbsp;</span>**/
         /**
          <div>
@@ -26970,6 +27414,17 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         setIsEncrypted(value: boolean): void;
+        /**<span id='method-fm.liveswitch.MediaFormat-setIsFixedBitrate'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets a value indicating whether a format only supports fixed bitrate.
+         </div>
+
+
+        @param {boolean} value
+        @return {void}
+        */
+        protected setIsFixedBitrate(value: boolean): void;
         /**<span id='method-fm.liveswitch.MediaFormat-setIsInjected'>&nbsp;</span>**/
         /**
          <div>
@@ -27038,7 +27493,7 @@ declare namespace fm.liveswitch {
     */
     class AudioFormat extends fm.liveswitch.MediaFormat<fm.liveswitch.AudioFormat> {
         getTypeString(): string;
-        private fmliveswitchAudioFormatInit();
+        private fmliveswitchAudioFormatInit;
         /**<span id='method-fm.liveswitch.AudioFormat-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -27450,6 +27905,36 @@ declare namespace fm.liveswitch {
     }
 }
 declare namespace fm.liveswitch {
+}
+declare namespace fm.liveswitch.datamessageheader {
+}
+declare namespace fm.liveswitch.datamessageheader {
+}
+declare namespace fm.liveswitch.datamessageheader {
+}
+declare namespace fm.liveswitch.datamessageheader {
+}
+declare namespace fm.liveswitch.datamessageheader {
+}
+declare namespace fm.liveswitch.datamessageheader {
+}
+declare namespace fm.liveswitch {
+    class CcmFirPolicyWrapper {
+        getTypeString(): string;
+        constructor(value: fm.liveswitch.CcmFirPolicy);
+        toString(): string;
+    }
+}
+declare namespace fm.liveswitch {
+    class NackPliPolicyWrapper {
+        getTypeString(): string;
+        constructor(value: fm.liveswitch.NackPliPolicy);
+        toString(): string;
+    }
+}
+declare namespace fm.liveswitch {
+}
+declare namespace fm.liveswitch {
     /**
      <div>
      Media track interface.
@@ -27501,7 +27986,7 @@ declare namespace fm.liveswitch {
     */
     class Candidate {
         getTypeString(): string;
-        private fmliveswitchCandidateInit();
+        private fmliveswitchCandidateInit;
         constructor();
         /**<span id='method-fm.liveswitch.Candidate-fromJson'>&nbsp;</span>**/
         /**
@@ -27655,7 +28140,7 @@ declare namespace fm.liveswitch {
     */
     class Color {
         getTypeString(): string;
-        private fmliveswitchColorInit();
+        private fmliveswitchColorInit;
         /**<span id='method-fm.liveswitch.Color-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -27901,6 +28386,7 @@ declare namespace fm.liveswitch {
         getIceServer(): fm.liveswitch.IceServer;
         getIceServers(): fm.liveswitch.IceServer[];
         getId(): string;
+        getLegacyTimeout(): boolean;
         getLocalDescription(): fm.liveswitch.SessionDescription;
         getRemoteDescription(): fm.liveswitch.SessionDescription;
         getSignallingState(): fm.liveswitch.SignallingState;
@@ -27928,6 +28414,7 @@ declare namespace fm.liveswitch {
         setIceGatherPolicy(value: fm.liveswitch.IceGatherPolicy): void;
         setIceServer(value: fm.liveswitch.IceServer): void;
         setIceServers(value: fm.liveswitch.IceServer[]): void;
+        setLegacyTimeout(value: boolean): void;
         setLocalDescription(localDescription: fm.liveswitch.SessionDescription): fm.liveswitch.Future<fm.liveswitch.SessionDescription>;
         setRemoteDescription(remoteDescription: fm.liveswitch.SessionDescription): fm.liveswitch.Future<fm.liveswitch.SessionDescription>;
         setTieBreaker(value: string): void;
@@ -28165,6 +28652,16 @@ declare namespace fm.liveswitch {
         @return {string}
         */
         getDataString(): string;
+        /**<span id='method-fm.liveswitch.DataChannelReceiveArgs-getRemoteConnectionInfo'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets remote connection info.
+         </div>
+
+
+        @return {fm.liveswitch.ConnectionInfo}
+        */
+        getRemoteConnectionInfo(): fm.liveswitch.ConnectionInfo;
         /**<span id='method-fm.liveswitch.DataChannelReceiveArgs-setDataBytes'>&nbsp;</span>**/
         /**
          <div>
@@ -29158,6 +29655,7 @@ declare namespace fm.liveswitch {
         setAudioGain(value: number): void;
         setAudioMuted(value: boolean): void;
         setAudioVolume(value: number): void;
+        setId(value: string): void;
         setVideoMuted(value: boolean): void;
     }
 }
@@ -29265,7 +29763,7 @@ declare namespace fm.liveswitch {
     */
     class Layout {
         getTypeString(): string;
-        private fmliveswitchLayoutInit();
+        private fmliveswitchLayoutInit;
         constructor();
         /**<span id='method-fm.liveswitch.Layout-getAllFrames'>&nbsp;</span>**/
         /**
@@ -29439,7 +29937,7 @@ declare namespace fm.liveswitch {
     */
     class LayoutFrame {
         getTypeString(): string;
-        private fmliveswitchLayoutFrameInit();
+        private fmliveswitchLayoutFrameInit;
         constructor();
         /**<span id='method-fm.liveswitch.LayoutFrame-constructor'>&nbsp;</span>**/
         /**
@@ -29708,7 +30206,7 @@ declare namespace fm.liveswitch {
     */
     class LayoutTable {
         getTypeString(): string;
-        private fmliveswitchLayoutTableInit();
+        private fmliveswitchLayoutTableInit;
         /**<span id='method-fm.liveswitch.LayoutTable-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -29824,17 +30322,48 @@ declare namespace fm.liveswitch {
     */
     class VideoBuffer extends fm.liveswitch.MediaBuffer<fm.liveswitch.VideoFormat, fm.liveswitch.VideoBuffer> {
         getTypeString(): string;
-        private fmliveswitchVideoBufferInit();
+        private fmliveswitchVideoBufferInit;
         /**<span id='method-fm.liveswitch.VideoBuffer-constructor'>&nbsp;</span>**/
         /**
          <div>
          Initializes a new instance of the `fm.liveswitch.videoBuffer` class.
          </div>
 
-
+        @param {number} width The width.
+        @param {number} height The height.
+        @param {fm.liveswitch.DataBuffer[]} dataBuffers The data buffers.
+        @param {fm.liveswitch.VideoFormat} format The format.
         @return {}
         */
-        constructor();
+        constructor(width: number, height: number, dataBuffers: fm.liveswitch.DataBuffer[], format: fm.liveswitch.VideoFormat);
+        /**<span id='method-fm.liveswitch.VideoBuffer-constructor'>&nbsp;</span>**/
+        /**
+         <div>
+         Initializes a new instance of the `fm.liveswitch.videoBuffer` class.
+         </div>
+
+        @param {number} width The width.
+        @param {number} height The height.
+        @param {number} stride The stride.
+        @param {fm.liveswitch.DataBuffer} dataBuffer The data buffer.
+        @param {fm.liveswitch.VideoFormat} format The format.
+        @return {}
+        */
+        constructor(width: number, height: number, stride: number, dataBuffer: fm.liveswitch.DataBuffer, format: fm.liveswitch.VideoFormat);
+        /**<span id='method-fm.liveswitch.VideoBuffer-constructor'>&nbsp;</span>**/
+        /**
+         <div>
+         Initializes a new instance of the `fm.liveswitch.videoBuffer` class.
+         </div>
+
+        @param {number} width The width.
+        @param {number} height The height.
+        @param {number[]} strides The strides.
+        @param {fm.liveswitch.DataBuffer[]} dataBuffers The data buffers.
+        @param {fm.liveswitch.VideoFormat} format The format.
+        @return {}
+        */
+        constructor(width: number, height: number, strides: number[], dataBuffers: fm.liveswitch.DataBuffer[], format: fm.liveswitch.VideoFormat);
         /**<span id='method-fm.liveswitch.VideoBuffer-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -29854,13 +30383,10 @@ declare namespace fm.liveswitch {
          Initializes a new instance of the `fm.liveswitch.videoBuffer` class.
          </div>
 
-        @param {number} width The width.
-        @param {number} height The height.
-        @param {fm.liveswitch.DataBuffer[]} dataBuffers The data buffers.
-        @param {fm.liveswitch.VideoFormat} format The format.
+
         @return {}
         */
-        constructor(width: number, height: number, dataBuffers: fm.liveswitch.DataBuffer[], format: fm.liveswitch.VideoFormat);
+        constructor();
         /**<span id='method-fm.liveswitch.VideoBuffer-createBlack'>&nbsp;</span>**/
         /**
          <div>
@@ -29898,9 +30424,10 @@ declare namespace fm.liveswitch {
         @param {number} green The green value.
         @param {number} blue The blue value.
         @param {string} formatName Name of the format.
+        @param {fm.liveswitch.DataBuffer} buffer The output data buffer.
         @return {fm.liveswitch.VideoBuffer}
         */
-        static createCustom(width: number, height: number, red: number, green: number, blue: number, formatName: string): fm.liveswitch.VideoBuffer;
+        static createCustom(width: number, height: number, red: number, green: number, blue: number, formatName: string, buffer: fm.liveswitch.DataBuffer): fm.liveswitch.VideoBuffer;
         /**<span id='method-fm.liveswitch.VideoBuffer-createCustom'>&nbsp;</span>**/
         /**
          <div>
@@ -29914,10 +30441,9 @@ declare namespace fm.liveswitch {
         @param {number} green The green value.
         @param {number} blue The blue value.
         @param {string} formatName Name of the format.
-        @param {fm.liveswitch.DataBuffer} buffer The output data buffer.
         @return {fm.liveswitch.VideoBuffer}
         */
-        static createCustom(width: number, height: number, red: number, green: number, blue: number, formatName: string, buffer: fm.liveswitch.DataBuffer): fm.liveswitch.VideoBuffer;
+        static createCustom(width: number, height: number, red: number, green: number, blue: number, formatName: string): fm.liveswitch.VideoBuffer;
         /**<span id='method-fm.liveswitch.VideoBuffer-createCyan'>&nbsp;</span>**/
         /**
          <div>
@@ -30167,6 +30693,37 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.VideoBuffer}
         */
         protected createInstance(): fm.liveswitch.VideoBuffer;
+        /**<span id='method-fm.liveswitch.VideoBuffer-getAValue'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the A value at a given index.
+         If the video buffer is not RGBA-type, then this will return 255.
+         </div>
+
+        @param {number} index The index.
+        @return {number} The A value.
+        */
+        getAValue(index: number): number;
+        /**<span id='method-fm.liveswitch.VideoBuffer-getBValue'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the B value at a given index.
+         </div>
+
+        @param {number} index The index.
+        @return {number} The B value, or -1 if the video buffer is not RGB/RGBA-type.
+        */
+        getBValue(index: number): number;
+        /**<span id='method-fm.liveswitch.VideoBuffer-getGValue'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the G value at a given index.
+         </div>
+
+        @param {number} index The index.
+        @return {number} The G value, or -1 if the video buffer is not RGB/RGBA-type.
+        */
+        getGValue(index: number): number;
         /**<span id='method-fm.liveswitch.VideoBuffer-getHeight'>&nbsp;</span>**/
         /**
          <div>
@@ -30267,6 +30824,26 @@ declare namespace fm.liveswitch {
         @return {boolean}
         */
         getIsNv21(): boolean;
+        /**<span id='method-fm.liveswitch.VideoBuffer-getIsPacked'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets a value indicating whether the data is packed into a single data buffer.
+         </div>
+
+
+        @return {boolean}
+        */
+        getIsPacked(): boolean;
+        /**<span id='method-fm.liveswitch.VideoBuffer-getIsPlanar'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets a value indicating whether the data is spread across multiple data buffers (planes).
+         </div>
+
+
+        @return {boolean}
+        */
+        getIsPlanar(): boolean;
         /**<span id='method-fm.liveswitch.VideoBuffer-getIsRaw'>&nbsp;</span>**/
         /**
          <div>
@@ -30367,6 +30944,16 @@ declare namespace fm.liveswitch {
         @return {number}
         */
         getOrientation(): number;
+        /**<span id='method-fm.liveswitch.VideoBuffer-getRValue'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the R value at a given index.
+         </div>
+
+        @param {number} index The index.
+        @return {number} The R value, or -1 if the video buffer is not RGB/RGBA-type.
+        */
+        getRValue(index: number): number;
         /**<span id='method-fm.liveswitch.VideoBuffer-getStride'>&nbsp;</span>**/
         /**
          <div>
@@ -30387,6 +30974,26 @@ declare namespace fm.liveswitch {
         @return {number[]}
         */
         getStrides(): number[];
+        /**<span id='method-fm.liveswitch.VideoBuffer-getUValue'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the U value at a given index.
+         </div>
+
+        @param {number} index The index.
+        @return {number} The U value, or -1 if the video buffer is not YUV-type.
+        */
+        getUValue(index: number): number;
+        /**<span id='method-fm.liveswitch.VideoBuffer-getVValue'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the V value at a given index.
+         </div>
+
+        @param {number} index The index.
+        @return {number} The V value, or -1 if the video buffer is not YUV-type.
+        */
+        getVValue(index: number): number;
         /**<span id='method-fm.liveswitch.VideoBuffer-getWidth'>&nbsp;</span>**/
         /**
          <div>
@@ -30397,6 +31004,16 @@ declare namespace fm.liveswitch {
         @return {number}
         */
         getWidth(): number;
+        /**<span id='method-fm.liveswitch.VideoBuffer-getYValue'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the Y value at a given index.
+         </div>
+
+        @param {number} index The index.
+        @return {number} The Y value, or -1 if the video buffer is not YUV-type.
+        */
+        getYValue(index: number): number;
         /**<span id='method-fm.liveswitch.VideoBuffer-mute'>&nbsp;</span>**/
         /**
          <div>
@@ -30408,6 +31025,40 @@ declare namespace fm.liveswitch {
         @return {boolean}
         */
         mute(): boolean;
+        /**<span id='method-fm.liveswitch.VideoBuffer-setAValue'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the A value at a given index.
+         If the video buffer is not RGBA-type, then this will return false.
+         </div>
+
+        @param {number} aValue The A value.
+        @param {number} index The index.
+        @return {boolean} true if the video buffer is RGBA-type.
+        */
+        setAValue(aValue: number, index: number): boolean;
+        /**<span id='method-fm.liveswitch.VideoBuffer-setBValue'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the B value at a given index.
+         </div>
+
+        @param {number} bValue The B value.
+        @param {number} index The index.
+        @return {boolean} true if the video buffer is RGB/RGBA-type.
+        */
+        setBValue(bValue: number, index: number): boolean;
+        /**<span id='method-fm.liveswitch.VideoBuffer-setGValue'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the G value at a given index.
+         </div>
+
+        @param {number} gValue The G value.
+        @param {number} index The index.
+        @return {boolean} true if the video buffer is RGB/RGBA-type.
+        */
+        setGValue(gValue: number, index: number): boolean;
         /**<span id='method-fm.liveswitch.VideoBuffer-setHeight'>&nbsp;</span>**/
         /**
          <div>
@@ -30430,6 +31081,17 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         setOrientation(value: number): void;
+        /**<span id='method-fm.liveswitch.VideoBuffer-setRValue'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the R value at a given index.
+         </div>
+
+        @param {number} rValue The R value.
+        @param {number} index The index.
+        @return {boolean} true if the video buffer is RGB/RGBA-type.
+        */
+        setRValue(rValue: number, index: number): boolean;
         /**<span id='method-fm.liveswitch.VideoBuffer-setStride'>&nbsp;</span>**/
         /**
          <div>
@@ -30452,6 +31114,28 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         setStrides(value: number[]): void;
+        /**<span id='method-fm.liveswitch.VideoBuffer-setUValue'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the U value at a given index.
+         </div>
+
+        @param {number} uValue The U value.
+        @param {number} index The index.
+        @return {boolean} true if the video buffer is YUV-type.
+        */
+        setUValue(uValue: number, index: number): boolean;
+        /**<span id='method-fm.liveswitch.VideoBuffer-setVValue'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the V value at a given index.
+         </div>
+
+        @param {number} vValue The V value.
+        @param {number} index The index.
+        @return {boolean} true if the video buffer is YUV-type.
+        */
+        setVValue(vValue: number, index: number): boolean;
         /**<span id='method-fm.liveswitch.VideoBuffer-setWidth'>&nbsp;</span>**/
         /**
          <div>
@@ -30463,6 +31147,17 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         setWidth(value: number): void;
+        /**<span id='method-fm.liveswitch.VideoBuffer-setYValue'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the Y value at a given index.
+         </div>
+
+        @param {number} yValue The Y value.
+        @param {number} index The index.
+        @return {boolean} true if the video buffer is YUV-type.
+        */
+        setYValue(yValue: number, index: number): boolean;
         /**<span id='method-fm.liveswitch.VideoBuffer-toJson'>&nbsp;</span>**/
         /**
          <div>
@@ -30472,10 +31167,40 @@ declare namespace fm.liveswitch {
         @return {string}
         */
         toJson(): string;
+        /**<span id='method-fm.liveswitch.VideoBuffer-toPacked'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a packed representation of this
+         planar buffer, if in YUV-planar format.
+         Otherwise, returns the current buffer.
+         If the planar data is not contiguous in
+         memory, new memory will be allocated for
+         the packed representation.
+         </div>
+
+        @return {fm.liveswitch.VideoBuffer}
+        */
+        toPacked(): fm.liveswitch.VideoBuffer;
+        /**<span id='method-fm.liveswitch.VideoBuffer-toPacked'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a packed representation of this
+         planar buffer, if in YUV-planar format.
+         Otherwise, returns the current buffer.
+         If the planar data is not contiguous in
+         memory, new memory will be allocated or
+         taken from the data buffer pool for
+         the packed representation.
+         </div>
+
+        @param {boolean} usePool Whether to use the data buffer pool for any required memory allocations.
+        @return {fm.liveswitch.VideoBuffer}
+        */
+        toPacked(usePool: boolean): fm.liveswitch.VideoBuffer;
         /**<span id='method-fm.liveswitch.VideoBuffer-toPlanar'>&nbsp;</span>**/
         /**
          <div>
-         Converts a planar representation of this
+         Creates a planar representation of this
          packed buffer, if in YUV-packed format.
          Otherwise, returns the current buffer.
          </div>
@@ -30533,10 +31258,10 @@ declare namespace fm.liveswitch {
          Gets a media by ID.
          </div>
 
-        @param {string} id The identifier.
+        @param {string} idValue The identifier.
         @return {fm.liveswitch.RemoteMedia}
         */
-        getById(id: string): fm.liveswitch.RemoteMedia;
+        getById(idValue: string): fm.liveswitch.RemoteMedia;
         /**<span id='method-fm.liveswitch.RemoteMediaCollection-removeSuccess'>&nbsp;</span>**/
         /**
          <div>
@@ -30592,13 +31317,13 @@ declare namespace fm.liveswitch {
 declare namespace fm.liveswitch {
     /**
      <div>
-     The header of an Rtp packet.
+     An RTP packet header.
      </div>
 
     */
     class RtpPacketHeader {
         getTypeString(): string;
-        private fmliveswitchRtpPacketHeaderInit();
+        private fmliveswitchRtpPacketHeaderInit;
         /**<span id='method-fm.liveswitch.RtpPacketHeader-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -31072,7 +31797,7 @@ declare namespace fm.liveswitch.sdp {
     */
     class Bandwidth {
         getTypeString(): string;
-        private fmliveswitchsdpBandwidthInit();
+        private fmliveswitchsdpBandwidthInit;
         /**<span id='method-fm.liveswitch.sdp.Bandwidth-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -31649,7 +32374,7 @@ declare namespace fm.liveswitch.sdp {
     */
     class CryptoAttribute extends fm.liveswitch.sdp.Attribute {
         getTypeString(): string;
-        private fmliveswitchsdpCryptoAttributeInit();
+        private fmliveswitchsdpCryptoAttributeInit;
         /**<span id='method-fm.liveswitch.sdp.CryptoAttribute-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -31946,7 +32671,7 @@ declare namespace fm.liveswitch.sdp {
     */
     class FormatParametersAttribute extends fm.liveswitch.sdp.Attribute {
         getTypeString(): string;
-        private fmliveswitchsdpFormatParametersAttributeInit();
+        private fmliveswitchsdpFormatParametersAttributeInit;
         /**<span id='method-fm.liveswitch.sdp.FormatParametersAttribute-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -32140,7 +32865,7 @@ declare namespace fm.liveswitch.sdp.ice {
     */
     class CandidateAttribute extends fm.liveswitch.sdp.Attribute {
         getTypeString(): string;
-        private fmliveswitchsdpiceCandidateAttributeInit();
+        private fmliveswitchsdpiceCandidateAttributeInit;
         constructor();
         /**<span id='method-fm.liveswitch.sdp.ice.CandidateAttribute-constructor'>&nbsp;</span>**/
         /**
@@ -32894,7 +33619,7 @@ declare namespace fm.liveswitch.sdp.ice {
     */
     class RemoteCandidate {
         getTypeString(): string;
-        private fmliveswitchsdpiceRemoteCandidateInit();
+        private fmliveswitchsdpiceRemoteCandidateInit;
         /**<span id='method-fm.liveswitch.sdp.ice.RemoteCandidate-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -33316,7 +34041,7 @@ declare namespace fm.liveswitch.sdp {
     */
     class MaxPacketTimeAttribute extends fm.liveswitch.sdp.Attribute {
         getTypeString(): string;
-        private fmliveswitchsdpMaxPacketTimeAttributeInit();
+        private fmliveswitchsdpMaxPacketTimeAttributeInit;
         /**<span id='method-fm.liveswitch.sdp.MaxPacketTimeAttribute-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -33371,7 +34096,7 @@ declare namespace fm.liveswitch.sdp {
     */
     class Media {
         getTypeString(): string;
-        private fmliveswitchsdpMediaInit();
+        private fmliveswitchsdpMediaInit;
         /**<span id='method-fm.liveswitch.sdp.Media-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -33663,6 +34388,18 @@ declare namespace fm.liveswitch.sdp {
         @return {fm.liveswitch.sdp.FormatParametersAttribute}
         */
         getFormatParametersAttribute(payloadType: number): fm.liveswitch.sdp.FormatParametersAttribute;
+        /**<span id='method-fm.liveswitch.sdp.MediaDescription-getFormatParameterValue'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets a format parameter value.
+         </div>
+
+
+        @param {number} payloadType
+        @param {string} formatParameterName
+        @return {string}
+        */
+        getFormatParameterValue(payloadType: number, formatParameterName: string): string;
         /**<span id='method-fm.liveswitch.sdp.MediaDescription-getIceOptionAttributes'>&nbsp;</span>**/
         /**
          <div>
@@ -33893,16 +34630,24 @@ declare namespace fm.liveswitch.sdp {
         /**<span id='method-fm.liveswitch.sdp.MediaDescription-getRtpMapAttribute'>&nbsp;</span>**/
         /**
          <div>
-         Obtains the RTP map attribute for a given format.
+         Obtains the RTP map attribute for a given payload type.
          </div>
 
-        @param {string} formatName Format name.
-        @param {number} clockRate Clock rate.
-        @param {string} formatParameters Format parameters.
+        @param {number} payloadType The payload type.
         @param {fm.liveswitch.Holder<number>} rtpMapAttributeIndex The index of the `fm.liveswitch.sdp.rtp.mapAttribute`.
         @return {fm.liveswitch.sdp.rtp.MapAttribute}
         */
-        getRtpMapAttribute(formatName: string, clockRate: number, formatParameters: string, rtpMapAttributeIndex: fm.liveswitch.Holder<number>): fm.liveswitch.sdp.rtp.MapAttribute;
+        getRtpMapAttribute(payloadType: number, rtpMapAttributeIndex: fm.liveswitch.Holder<number>): fm.liveswitch.sdp.rtp.MapAttribute;
+        /**<span id='method-fm.liveswitch.sdp.MediaDescription-getRtpMapAttribute'>&nbsp;</span>**/
+        /**
+         <div>
+         Obtains the RTP map attribute for a given payload type.
+         </div>
+
+        @param {number} payloadType The payload type.
+        @return {fm.liveswitch.sdp.rtp.MapAttribute}
+        */
+        getRtpMapAttribute(payloadType: number): fm.liveswitch.sdp.rtp.MapAttribute;
         /**<span id='method-fm.liveswitch.sdp.MediaDescription-getRtpMapAttribute'>&nbsp;</span>**/
         /**
          <div>
@@ -33915,6 +34660,19 @@ declare namespace fm.liveswitch.sdp {
         @return {fm.liveswitch.sdp.rtp.MapAttribute}
         */
         getRtpMapAttribute(formatName: string, clockRate: number, formatParameters: string): fm.liveswitch.sdp.rtp.MapAttribute;
+        /**<span id='method-fm.liveswitch.sdp.MediaDescription-getRtpMapAttribute'>&nbsp;</span>**/
+        /**
+         <div>
+         Obtains the RTP map attribute for a given format.
+         </div>
+
+        @param {string} formatName Format name.
+        @param {number} clockRate Clock rate.
+        @param {string} formatParameters Format parameters.
+        @param {fm.liveswitch.Holder<number>} rtpMapAttributeIndex The index of the `fm.liveswitch.sdp.rtp.mapAttribute`.
+        @return {fm.liveswitch.sdp.rtp.MapAttribute}
+        */
+        getRtpMapAttribute(formatName: string, clockRate: number, formatParameters: string, rtpMapAttributeIndex: fm.liveswitch.Holder<number>): fm.liveswitch.sdp.rtp.MapAttribute;
         /**<span id='method-fm.liveswitch.sdp.MediaDescription-getRtpMapAttributes'>&nbsp;</span>**/
         /**
          <div>
@@ -33922,9 +34680,21 @@ declare namespace fm.liveswitch.sdp {
          </div>
 
 
-        @return {fm.liveswitch.sdp.Attribute[]}
+        @return {fm.liveswitch.sdp.rtp.MapAttribute[]}
         */
-        getRtpMapAttributes(): fm.liveswitch.sdp.Attribute[];
+        getRtpMapAttributes(): fm.liveswitch.sdp.rtp.MapAttribute[];
+        /**<span id='method-fm.liveswitch.sdp.MediaDescription-getRtpMapAttributes'>&nbsp;</span>**/
+        /**
+         <div>
+         Obtains the RTP map attributes for a given format.
+         </div>
+
+        @param {string} formatName Format name.
+        @param {number} clockRate Clock rate.
+        @param {string} formatParameters Format parameters.
+        @return {fm.liveswitch.sdp.rtp.MapAttribute[]}
+        */
+        getRtpMapAttributes(formatName: string, clockRate: number, formatParameters: string): fm.liveswitch.sdp.rtp.MapAttribute[];
         /**<span id='method-fm.liveswitch.sdp.MediaDescription-getRtpMapAttributes'>&nbsp;</span>**/
         /**
          <div>
@@ -33938,18 +34708,6 @@ declare namespace fm.liveswitch.sdp {
         @return {fm.liveswitch.sdp.rtp.MapAttribute[]}
         */
         getRtpMapAttributes(formatName: string, clockRate: number, formatParameters: string, rtpMapAttributeIndices: fm.liveswitch.Holder<number[]>): fm.liveswitch.sdp.rtp.MapAttribute[];
-        /**<span id='method-fm.liveswitch.sdp.MediaDescription-getRtpMapAttributes'>&nbsp;</span>**/
-        /**
-         <div>
-         Obtains the RTP map attributes for a given format.
-         </div>
-
-        @param {string} formatName Format name.
-        @param {number} clockRate Clock rate.
-        @param {string} formatParameters Format parameters.
-        @return {fm.liveswitch.sdp.rtp.MapAttribute[]}
-        */
-        getRtpMapAttributes(formatName: string, clockRate: number, formatParameters: string): fm.liveswitch.sdp.rtp.MapAttribute[];
         /**<span id='method-fm.liveswitch.sdp.MediaDescription-getSctpMapAttribute'>&nbsp;</span>**/
         /**
          <div>
@@ -33995,6 +34753,17 @@ declare namespace fm.liveswitch.sdp {
         /**<span id='method-fm.liveswitch.sdp.MediaDescription-getSsrcAttributes'>&nbsp;</span>**/
         /**
          <div>
+         Obtains the SSRC attributes matching a given synchronization source and name.
+         </div>
+
+        @param {number} ssrc The synchronization source.
+        @param {string} name The attribute name.
+        @return {fm.liveswitch.sdp.rtp.SsrcAttribute[]}
+        */
+        getSsrcAttributes(ssrc: number, name: string): fm.liveswitch.sdp.rtp.SsrcAttribute[];
+        /**<span id='method-fm.liveswitch.sdp.MediaDescription-getSsrcAttributes'>&nbsp;</span>**/
+        /**
+         <div>
          Obtains the SSRC attributes.
          </div>
 
@@ -34012,17 +34781,6 @@ declare namespace fm.liveswitch.sdp {
         @return {fm.liveswitch.sdp.rtp.SsrcAttribute[]}
         */
         getSsrcAttributes(ssrc: number): fm.liveswitch.sdp.rtp.SsrcAttribute[];
-        /**<span id='method-fm.liveswitch.sdp.MediaDescription-getSsrcAttributes'>&nbsp;</span>**/
-        /**
-         <div>
-         Obtains the SSRC attributes matching a given synchronization source and name.
-         </div>
-
-        @param {number} ssrc The synchronization source.
-        @param {string} name The attribute name.
-        @return {fm.liveswitch.sdp.rtp.SsrcAttribute[]}
-        */
-        getSsrcAttributes(ssrc: number, name: string): fm.liveswitch.sdp.rtp.SsrcAttribute[];
         /**<span id='method-fm.liveswitch.sdp.MediaDescription-getStreamDirection'>&nbsp;</span>**/
         /**
          <div>
@@ -34043,19 +34801,6 @@ declare namespace fm.liveswitch.sdp {
         @return {boolean}
         */
         getSupportsRtcpMultiplexing(): boolean;
-        /**<span id='method-fm.liveswitch.sdp.MediaDescription-insertCcmFirAttribute'>&nbsp;</span>**/
-        /**
-         <div>
-         Inserts a CCM-FIR attribute for the given format
-         if it doesn't already exist.
-         </div>
-
-        @param {string} formatName Format name.
-        @param {number} clockRate Clock rate.
-        @param {string} formatParameters Format parameters.
-        @return {boolean}
-        */
-        insertCcmFirAttribute(formatName: string, clockRate: number, formatParameters: string): boolean;
         /**<span id='method-fm.liveswitch.sdp.MediaDescription-insertMediaAttribute'>&nbsp;</span>**/
         /**
          <div>
@@ -34068,31 +34813,6 @@ declare namespace fm.liveswitch.sdp {
         @return {void}
         */
         insertMediaAttribute(attribute: fm.liveswitch.sdp.Attribute, index: number): void;
-        /**<span id='method-fm.liveswitch.sdp.MediaDescription-insertNackPliAttribute'>&nbsp;</span>**/
-        /**
-         <div>
-         Inserts a NACK-PLI attribute for the given format
-         if it doesn't already exist.
-         </div>
-
-        @param {string} formatName Format name.
-        @param {number} clockRate Clock rate.
-        @param {string} formatParameters Format parameters.
-        @return {boolean}
-        */
-        insertNackPliAttribute(formatName: string, clockRate: number, formatParameters: string): boolean;
-        /**<span id='method-fm.liveswitch.sdp.MediaDescription-insertRembAttribute'>&nbsp;</span>**/
-        /**
-         <div>
-         Inserts a REMB attribute for the given format if it doesn't already exist.
-         </div>
-
-        @param {string} formatName Format name.
-        @param {number} clockRate Clock rate.
-        @param {string} formatParameters Format parameters.
-        @return {boolean}
-        */
-        insertRembAttribute(formatName: string, clockRate: number, formatParameters: string): boolean;
         /**<span id='method-fm.liveswitch.sdp.MediaDescription-removeBandwidth'>&nbsp;</span>**/
         /**
          <div>
@@ -34135,6 +34855,19 @@ declare namespace fm.liveswitch.sdp {
         @return {void}
         */
         setEncryptionKey(value: fm.liveswitch.sdp.EncryptionKey): void;
+        /**<span id='method-fm.liveswitch.sdp.MediaDescription-setFormatParameterValue'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets a format parameter value.
+         </div>
+
+
+        @param {number} payloadType
+        @param {string} formatParameterName
+        @param {string} formatParameterValue
+        @return {boolean}
+        */
+        setFormatParameterValue(payloadType: number, formatParameterName: string, formatParameterValue: string): boolean;
         /**<span id='method-fm.liveswitch.sdp.MediaDescription-setMediaTitle'>&nbsp;</span>**/
         /**
          <div>
@@ -34245,10 +34978,10 @@ declare namespace fm.liveswitch.sdp {
          Initializes a new instance of the `fm.liveswitch.sdp.mediaStreamIdAttribute` class.
          </div>
 
-        @param {string} id The identifier.
+        @param {string} idValue The identifier.
         @return {}
         */
-        constructor(id: string);
+        constructor(idValue: string);
         /**<span id='method-fm.liveswitch.sdp.MediaStreamIdAttribute-fromAttributeValue'>&nbsp;</span>**/
         /**
          <div>
@@ -35201,7 +35934,7 @@ declare namespace fm.liveswitch.sdp {
     */
     class Origin {
         getTypeString(): string;
-        private fmliveswitchsdpOriginInit();
+        private fmliveswitchsdpOriginInit;
         /**<span id='method-fm.liveswitch.sdp.Origin-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -35386,7 +36119,7 @@ declare namespace fm.liveswitch.sdp {
     */
     class PacketTimeAttribute extends fm.liveswitch.sdp.Attribute {
         getTypeString(): string;
-        private fmliveswitchsdpPacketTimeAttributeInit();
+        private fmliveswitchsdpPacketTimeAttributeInit;
         /**<span id='method-fm.liveswitch.sdp.PacketTimeAttribute-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -35466,7 +36199,7 @@ declare namespace fm.liveswitch.sdp {
     */
     class QualityAttribute extends fm.liveswitch.sdp.Attribute {
         getTypeString(): string;
-        private fmliveswitchsdpQualityAttributeInit();
+        private fmliveswitchsdpQualityAttributeInit;
         /**<span id='method-fm.liveswitch.sdp.QualityAttribute-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -35681,7 +36414,7 @@ declare namespace fm.liveswitch.sdp.rtcp {
     */
     class Attribute extends fm.liveswitch.sdp.Attribute {
         getTypeString(): string;
-        private fmliveswitchsdprtcpAttributeInit();
+        private fmliveswitchsdprtcpAttributeInit;
         constructor();
         /**<span id='method-fm.liveswitch.sdp.rtcp.Attribute-constructor'>&nbsp;</span>**/
         /**
@@ -35777,7 +36510,7 @@ declare namespace fm.liveswitch.sdp.rtcp {
     */
     class FeedbackAttribute extends fm.liveswitch.sdp.Attribute {
         getTypeString(): string;
-        private fmliveswitchsdprtcpFeedbackAttributeInit();
+        private fmliveswitchsdprtcpFeedbackAttributeInit;
         constructor();
         /**<span id='method-fm.liveswitch.sdp.rtcp.FeedbackAttribute-constructor'>&nbsp;</span>**/
         /**
@@ -36145,18 +36878,18 @@ declare namespace fm.liveswitch.sdp.rtp {
     */
     class ExtMapAttribute extends fm.liveswitch.sdp.Attribute {
         getTypeString(): string;
-        private fmliveswitchsdprtpExtMapAttributeInit();
+        private fmliveswitchsdprtpExtMapAttributeInit;
         /**<span id='method-fm.liveswitch.sdp.rtp.ExtMapAttribute-constructor'>&nbsp;</span>**/
         /**
          <div>
          RTP Extension Map Attribute.
          </div>
 
-        @param {number} id Local identifier of this extension and is an integer in the valid range inclusive (0 is reserved for padding in both forms, and 15 is reserved in the one-byte header form.
+        @param {number} idValue Local identifier of this extension and is an integer in the valid range inclusive (0 is reserved for padding in both forms, and 15 is reserved in the one-byte header form.
         @param {string} uri Well known extension identifier.
         @return {}
         */
-        constructor(id: number, uri: string);
+        constructor(idValue: number, uri: string);
         constructor();
         /**<span id='method-fm.liveswitch.sdp.rtp.ExtMapAttribute-constructor'>&nbsp;</span>**/
         /**
@@ -36164,12 +36897,12 @@ declare namespace fm.liveswitch.sdp.rtp {
          RTP Extension Map Attribute.
          </div>
 
-        @param {number} id Local identifier of this extension and is an integer in the valid range inclusive (0 is reserved for padding in both forms, and 15 is reserved in the one-byte header form.
+        @param {number} idValue Local identifier of this extension and is an integer in the valid range inclusive (0 is reserved for padding in both forms, and 15 is reserved in the one-byte header form.
         @param {string} uri Well known extension identifier.
         @param {fm.liveswitch.StreamDirection} direction Disered direction of this RTP Extension Header.
         @return {}
         */
-        constructor(id: number, uri: string, direction: fm.liveswitch.StreamDirection);
+        constructor(idValue: number, uri: string, direction: fm.liveswitch.StreamDirection);
         /**<span id='method-fm.liveswitch.sdp.rtp.ExtMapAttribute-fromAttributeValue'>&nbsp;</span>**/
         /**
          <div>
@@ -36268,7 +37001,7 @@ declare namespace fm.liveswitch.sdp.rtp {
     */
     class MapAttribute extends fm.liveswitch.sdp.Attribute {
         getTypeString(): string;
-        private fmliveswitchsdprtpMapAttributeInit();
+        private fmliveswitchsdprtpMapAttributeInit;
         /**<span id='method-fm.liveswitch.sdp.rtp.MapAttribute-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -36661,7 +37394,7 @@ declare namespace fm.liveswitch.sdp.rtp {
     */
     class SsrcAttribute extends fm.liveswitch.sdp.Attribute {
         getTypeString(): string;
-        private fmliveswitchsdprtpSsrcAttributeInit();
+        private fmliveswitchsdprtpSsrcAttributeInit;
         /**<span id='method-fm.liveswitch.sdp.rtp.SsrcAttribute-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -36835,7 +37568,7 @@ declare namespace fm.liveswitch.sdp.sctp {
     */
     class MapAttribute extends fm.liveswitch.sdp.Attribute {
         getTypeString(): string;
-        private fmliveswitchsdpsctpMapAttributeInit();
+        private fmliveswitchsdpsctpMapAttributeInit;
         /**<span id='method-fm.liveswitch.sdp.sctp.MapAttribute-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -36913,7 +37646,7 @@ declare namespace fm.liveswitch.sdp.sctp {
     */
     class MaxMessageSizeAttribute extends fm.liveswitch.sdp.Attribute {
         getTypeString(): string;
-        private fmliveswitchsdpsctpMaxMessageSizeAttributeInit();
+        private fmliveswitchsdpsctpMaxMessageSizeAttributeInit;
         /**<span id='method-fm.liveswitch.sdp.sctp.MaxMessageSizeAttribute-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -37064,7 +37797,7 @@ declare namespace fm.liveswitch.sdp.sctp {
     */
     class PortAttribute extends fm.liveswitch.sdp.Attribute {
         getTypeString(): string;
-        private fmliveswitchsdpsctpPortAttributeInit();
+        private fmliveswitchsdpsctpPortAttributeInit;
         /**<span id='method-fm.liveswitch.sdp.sctp.PortAttribute-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -37474,7 +38207,7 @@ declare namespace fm.liveswitch.sdp {
     */
     class TimeZone {
         getTypeString(): string;
-        private fmliveswitchsdpTimeZoneInit();
+        private fmliveswitchsdpTimeZoneInit;
         /**<span id='method-fm.liveswitch.sdp.TimeZone-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -37608,7 +38341,7 @@ declare namespace fm.liveswitch.sdp {
     */
     class Timing {
         getTypeString(): string;
-        private fmliveswitchsdpTimingInit();
+        private fmliveswitchsdpTimingInit;
         /**<span id='method-fm.liveswitch.sdp.Timing-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -37876,7 +38609,7 @@ declare namespace fm.liveswitch {
     */
     class SessionDescription {
         getTypeString(): string;
-        private fmliveswitchSessionDescriptionInit();
+        private fmliveswitchSessionDescriptionInit;
         constructor();
         /**<span id='method-fm.liveswitch.SessionDescription-fromJson'>&nbsp;</span>**/
         /**
@@ -38051,7 +38784,7 @@ declare namespace fm.liveswitch {
     */
     class Size {
         getTypeString(): string;
-        private fmliveswitchSizeInit();
+        private fmliveswitchSizeInit;
         /**<span id='method-fm.liveswitch.Size-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -38142,11 +38875,11 @@ declare namespace fm.liveswitch {
          Initializes a new instance of the `fm.liveswitch.sinkOutput` class.
          </div>
 
-        @param {string} id The identifier.
+        @param {string} idValue The identifier.
         @param {string} name The name.
         @return {}
         */
-        constructor(id: string, name: string);
+        constructor(idValue: string, name: string);
         /**<span id='method-fm.liveswitch.SinkOutput-fromJson'>&nbsp;</span>**/
         /**
          <div>
@@ -38245,11 +38978,11 @@ declare namespace fm.liveswitch {
          Initializes a new instance of the `fm.liveswitch.sourceInput` class.
          </div>
 
-        @param {string} id The identifier.
+        @param {string} idValue The identifier.
         @param {string} name The name.
         @return {}
         */
-        constructor(id: string, name: string);
+        constructor(idValue: string, name: string);
         /**<span id='method-fm.liveswitch.SourceInput-fromJson'>&nbsp;</span>**/
         /**
          <div>
@@ -38418,7 +39151,7 @@ declare namespace fm.liveswitch {
     */
     class CodecStats extends fm.liveswitch.BaseStats {
         getTypeString(): string;
-        private fmliveswitchCodecStatsInit();
+        private fmliveswitchCodecStatsInit;
         constructor();
         /**<span id='method-fm.liveswitch.CodecStats-fromJson'>&nbsp;</span>**/
         /**
@@ -38716,7 +39449,7 @@ declare namespace fm.liveswitch {
     */
     abstract class MediaComponentStats extends fm.liveswitch.BaseStats {
         getTypeString(): string;
-        private fmliveswitchMediaComponentStatsInit();
+        private fmliveswitchMediaComponentStatsInit;
         constructor();
         /**<span id='method-fm.liveswitch.MediaComponentStats-deserializeProperties'>&nbsp;</span>**/
         /**
@@ -38989,7 +39722,7 @@ declare namespace fm.liveswitch {
     */
     class MediaSenderStats extends fm.liveswitch.MediaComponentStats {
         getTypeString(): string;
-        private fmliveswitchMediaSenderStatsInit();
+        private fmliveswitchMediaSenderStatsInit;
         constructor();
         /**<span id='method-fm.liveswitch.MediaSenderStats-fromJson'>&nbsp;</span>**/
         /**
@@ -39082,7 +39815,7 @@ declare namespace fm.liveswitch {
     */
     class MediaReceiverStats extends fm.liveswitch.MediaComponentStats {
         getTypeString(): string;
-        private fmliveswitchMediaReceiverStatsInit();
+        private fmliveswitchMediaReceiverStatsInit;
         constructor();
         /**<span id='method-fm.liveswitch.MediaReceiverStats-fromJson'>&nbsp;</span>**/
         /**
@@ -39195,7 +39928,7 @@ declare namespace fm.liveswitch {
     */
     class MediaTrackStats extends fm.liveswitch.BaseStats {
         getTypeString(): string;
-        private fmliveswitchMediaTrackStatsInit();
+        private fmliveswitchMediaTrackStatsInit;
         constructor();
         /**<span id='method-fm.liveswitch.MediaTrackStats-fromJson'>&nbsp;</span>**/
         /**
@@ -39418,7 +40151,7 @@ declare namespace fm.liveswitch {
     */
     class CandidateStats extends fm.liveswitch.BaseStats {
         getTypeString(): string;
-        private fmliveswitchCandidateStatsInit();
+        private fmliveswitchCandidateStatsInit;
         constructor();
         /**<span id='method-fm.liveswitch.CandidateStats-fromJson'>&nbsp;</span>**/
         /**
@@ -39611,7 +40344,7 @@ declare namespace fm.liveswitch {
     */
     class CandidatePairStats extends fm.liveswitch.BaseStats {
         getTypeString(): string;
-        private fmliveswitchCandidatePairStatsInit();
+        private fmliveswitchCandidatePairStatsInit;
         constructor();
         /**<span id='method-fm.liveswitch.CandidatePairStats-fromJson'>&nbsp;</span>**/
         /**
@@ -39966,7 +40699,7 @@ declare namespace fm.liveswitch {
     */
     class DataChannelStats extends fm.liveswitch.BaseStats {
         getTypeString(): string;
-        private fmliveswitchDataChannelStatsInit();
+        private fmliveswitchDataChannelStatsInit;
         constructor();
         /**<span id='method-fm.liveswitch.DataChannelStats-fromJson'>&nbsp;</span>**/
         /**
@@ -40433,8 +41166,8 @@ declare namespace fm.liveswitch {
          Converts string representations of stream directions to `fm.liveswitch.streamDirection`.
          </div>
 
-        @param {string} directionString String representation of direction.
-        @return {fm.liveswitch.StreamDirection}
+        @param {string} directionString The direction string.
+        @return {fm.liveswitch.StreamDirection} The direction.
         */
         static directionFromString(directionString: string): fm.liveswitch.StreamDirection;
         /**<span id='method-fm.liveswitch.StreamDirectionHelper-directionToString'>&nbsp;</span>**/
@@ -40443,10 +41176,134 @@ declare namespace fm.liveswitch {
          Obtains the string representation of `fm.liveswitch.streamDirection`.
          </div>
 
-        @param {fm.liveswitch.StreamDirection} direction StreamDirection that requires conversion.
-        @return {string}
+        @param {fm.liveswitch.StreamDirection} direction The direction.
+        @return {string} The direction string.
         */
         static directionToString(direction: fm.liveswitch.StreamDirection): string;
+        /**<span id='method-fm.liveswitch.StreamDirectionHelper-isReceiveDisabled'>&nbsp;</span>**/
+        /**
+         <div>
+         Checks the receive flag.
+         </div>
+
+        @param {string} directionString The direction string.
+        @return {boolean} The receive flag.
+        */
+        static isReceiveDisabled(directionString: string): boolean;
+        /**<span id='method-fm.liveswitch.StreamDirectionHelper-isReceiveDisabled'>&nbsp;</span>**/
+        /**
+         <div>
+         Checks the receive flag.
+         </div>
+
+        @param {fm.liveswitch.StreamDirection} direction The direction.
+        @return {boolean} The receive flag.
+        */
+        static isReceiveDisabled(direction: fm.liveswitch.StreamDirection): boolean;
+        /**<span id='method-fm.liveswitch.StreamDirectionHelper-isSendDisabled'>&nbsp;</span>**/
+        /**
+         <div>
+         Checks the send flag.
+         </div>
+
+        @param {fm.liveswitch.StreamDirection} direction The direction.
+        @return {boolean} The send flag.
+        */
+        static isSendDisabled(direction: fm.liveswitch.StreamDirection): boolean;
+        /**<span id='method-fm.liveswitch.StreamDirectionHelper-isSendDisabled'>&nbsp;</span>**/
+        /**
+         <div>
+         Checks the send flag.
+         </div>
+
+        @param {string} directionString The direction string.
+        @return {boolean} The send flag.
+        */
+        static isSendDisabled(directionString: string): boolean;
+        /**<span id='method-fm.liveswitch.StreamDirectionHelper-setReceiveDisabled'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the receive flag.
+         </div>
+
+        @param {fm.liveswitch.StreamDirection} direction The direction.
+        @param {boolean} disabled Whether to disable the receive flag.
+        @return {fm.liveswitch.StreamDirection} The new direction.
+        */
+        static setReceiveDisabled(direction: fm.liveswitch.StreamDirection, disabled: boolean): fm.liveswitch.StreamDirection;
+        /**<span id='method-fm.liveswitch.StreamDirectionHelper-setReceiveDisabled'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the receive flag.
+         </div>
+
+        @param {string} directionString The direction string.
+        @param {boolean} disabled Whether to disable the receive flag.
+        @return {string} The new direction.
+        */
+        static setReceiveDisabled(directionString: string, disabled: boolean): string;
+        /**<span id='method-fm.liveswitch.StreamDirectionHelper-setSendDisabled'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the send flag.
+         </div>
+
+        @param {fm.liveswitch.StreamDirection} direction The direction.
+        @param {boolean} disabled Whether to disable the send flag.
+        @return {fm.liveswitch.StreamDirection} The new direction.
+        */
+        static setSendDisabled(direction: fm.liveswitch.StreamDirection, disabled: boolean): fm.liveswitch.StreamDirection;
+        /**<span id='method-fm.liveswitch.StreamDirectionHelper-setSendDisabled'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the send flag.
+         </div>
+
+        @param {string} directionString The direction string.
+        @param {boolean} disabled Whether to disable the send flag.
+        @return {string} The new direction.
+        */
+        static setSendDisabled(directionString: string, disabled: boolean): string;
+        /**<span id='method-fm.liveswitch.StreamDirectionHelper-toggleReceive'>&nbsp;</span>**/
+        /**
+         <div>
+         Toggles the receive flag.
+         </div>
+
+        @param {fm.liveswitch.StreamDirection} direction The direction.
+        @return {fm.liveswitch.StreamDirection} The new direction.
+        */
+        static toggleReceive(direction: fm.liveswitch.StreamDirection): fm.liveswitch.StreamDirection;
+        /**<span id='method-fm.liveswitch.StreamDirectionHelper-toggleReceive'>&nbsp;</span>**/
+        /**
+         <div>
+         Toggles the receive flag.
+         </div>
+
+        @param {string} directionString The direction string.
+        @return {string} The new direction.
+        */
+        static toggleReceive(directionString: string): string;
+        /**<span id='method-fm.liveswitch.StreamDirectionHelper-toggleSend'>&nbsp;</span>**/
+        /**
+         <div>
+         Toggles the send flag.
+         </div>
+
+        @param {string} directionString The direction string.
+        @return {string} The new direction.
+        */
+        static toggleSend(directionString: string): string;
+        /**<span id='method-fm.liveswitch.StreamDirectionHelper-toggleSend'>&nbsp;</span>**/
+        /**
+         <div>
+         Toggles the send flag.
+         </div>
+
+        @param {fm.liveswitch.StreamDirection} direction The direction.
+        @return {fm.liveswitch.StreamDirection} The new direction.
+        */
+        static toggleSend(direction: fm.liveswitch.StreamDirection): fm.liveswitch.StreamDirection;
     }
 }
 declare namespace fm.liveswitch {
@@ -40458,7 +41315,7 @@ declare namespace fm.liveswitch {
     */
     class TransportStats extends fm.liveswitch.BaseStats {
         getTypeString(): string;
-        private fmliveswitchTransportStatsInit();
+        private fmliveswitchTransportStatsInit;
         constructor();
         /**<span id='method-fm.liveswitch.TransportStats-fromJson'>&nbsp;</span>**/
         /**
@@ -40984,7 +41841,7 @@ declare namespace fm.liveswitch {
     */
     class VideoConfig extends fm.liveswitch.MediaConfig<fm.liveswitch.VideoConfig> {
         getTypeString(): string;
-        private fmliveswitchVideoConfigInit();
+        private fmliveswitchVideoConfigInit;
         /**<span id='method-fm.liveswitch.VideoConfig-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -41133,7 +41990,7 @@ declare namespace fm.liveswitch {
     */
     class Channel extends fm.liveswitch.Dynamic {
         getTypeString(): string;
-        private fmliveswitchChannelInit();
+        private fmliveswitchChannelInit;
         /**<span id='method-fm.liveswitch.Channel-addOnClaimUpdate'>&nbsp;</span>**/
         /**
          <div>
@@ -41249,10 +42106,10 @@ declare namespace fm.liveswitch {
          </div>
 
 
-        @param {fm.liveswitch.IAction2<fm.liveswitch.ClientInfo,fm.liveswitch.ClientConfig>} value
+        @param {fm.liveswitch.IAction2<fm.liveswitch.ClientInfo,fm.liveswitch.ClientInfo>} value
         @return {void}
         */
-        addOnRemoteClientUpdate(value: fm.liveswitch.IAction2<fm.liveswitch.ClientInfo, fm.liveswitch.ClientConfig>): void;
+        addOnRemoteClientUpdate(value: fm.liveswitch.IAction2<fm.liveswitch.ClientInfo, fm.liveswitch.ClientInfo>): void;
         /**<span id='method-fm.liveswitch.Channel-addOnRemoteUpstreamConnectionClose'>&nbsp;</span>**/
         /**
          <div>
@@ -41323,6 +42180,19 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.Channel-createMcuConnection'>&nbsp;</span>**/
         /**
          <div>
+         Creates an audio-only MCU connection with a specific media
+         identifier that can be targeted by SFU downstream connections.
+         The media identifer is only relevant if this connection will send media.
+         </div>
+
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {string} mediaId The media identifier, unique to this channel, for persistent SFU downstream connections.
+        @return {fm.liveswitch.McuConnection}
+        */
+        createMcuConnection(audioStream: fm.liveswitch.AudioStream, mediaId: string): fm.liveswitch.McuConnection;
+        /**<span id='method-fm.liveswitch.Channel-createMcuConnection'>&nbsp;</span>**/
+        /**
+         <div>
          Creates a video-only MCU connection.
          </div>
 
@@ -41330,6 +42200,130 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.McuConnection}
         */
         createMcuConnection(videoStream: fm.liveswitch.VideoStream): fm.liveswitch.McuConnection;
+        /**<span id='method-fm.liveswitch.Channel-createMcuConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a video-only MCU connection with a specific media
+         identifier that can be targeted by SFU downstream connections.
+         The media identifer is only relevant if this connection will send media.
+         </div>
+
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {string} mediaId The media identifier, unique to this channel, for persistent SFU downstream connections.
+        @return {fm.liveswitch.McuConnection}
+        */
+        createMcuConnection(videoStream: fm.liveswitch.VideoStream, mediaId: string): fm.liveswitch.McuConnection;
+        /**<span id='method-fm.liveswitch.Channel-createMcuConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a data-only MCU connection.
+         </div>
+
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.McuConnection}
+        */
+        createMcuConnection(dataStream: fm.liveswitch.DataStream): fm.liveswitch.McuConnection;
+        /**<span id='method-fm.liveswitch.Channel-createMcuConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio/data MCU connection.
+         </div>
+
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.McuConnection}
+        */
+        createMcuConnection(audioStream: fm.liveswitch.AudioStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.McuConnection;
+        /**<span id='method-fm.liveswitch.Channel-createMcuConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a video/data MCU connection.
+         </div>
+
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.McuConnection}
+        */
+        createMcuConnection(videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.McuConnection;
+        /**<span id='method-fm.liveswitch.Channel-createMcuConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio/video/data MCU connection.
+         </div>
+
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.McuConnection}
+        */
+        createMcuConnection(audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.McuConnection;
+        /**<span id='method-fm.liveswitch.Channel-createMcuConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a data-only MCU connection with a specific media
+         identifier that can be targeted by SFU downstream connections.
+         The media identifer is only relevant if this connection will send media.
+         </div>
+
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @param {string} mediaId The media identifier, unique to this channel, for persistent SFU downstream connections.
+        @return {fm.liveswitch.McuConnection}
+        */
+        createMcuConnection(dataStream: fm.liveswitch.DataStream, mediaId: string): fm.liveswitch.McuConnection;
+        /**<span id='method-fm.liveswitch.Channel-createMcuConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a video/data MCU connection with a specific media
+         identifier that can be targeted by SFU downstream connections.
+         The media identifer is only relevant if this connection will send media.
+         </div>
+
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @param {string} mediaId The media identifier, unique to this channel, for persistent SFU downstream connections.
+        @return {fm.liveswitch.McuConnection}
+        */
+        createMcuConnection(videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream, mediaId: string): fm.liveswitch.McuConnection;
+        /**<span id='method-fm.liveswitch.Channel-createMcuConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio/video MCU connection with a specific media
+         identifier that can be targeted by SFU downstream connections.
+         The media identifer is only relevant if this connection will send media.
+         </div>
+
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @param {string} mediaId The media identifier, unique to this channel, for persistent SFU downstream connections.
+        @return {fm.liveswitch.McuConnection}
+        */
+        createMcuConnection(audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream, mediaId: string): fm.liveswitch.McuConnection;
+        /**<span id='method-fm.liveswitch.Channel-createMcuConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio/video MCU connection.
+         </div>
+
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @return {fm.liveswitch.McuConnection}
+        */
+        createMcuConnection(audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream): fm.liveswitch.McuConnection;
+        /**<span id='method-fm.liveswitch.Channel-createMcuConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio/video MCU connection with a specific media
+         identifier that can be targeted by SFU downstream connections.
+         The media identifer is only relevant if this connection will send media.
+         </div>
+
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {string} mediaId The media identifier, unique to this channel, for persistent SFU downstream connections.
+        @return {fm.liveswitch.McuConnection}
+        */
+        createMcuConnection(audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream, mediaId: string): fm.liveswitch.McuConnection;
         /**<span id='method-fm.liveswitch.Channel-createMcuConnection'>&nbsp;</span>**/
         /**
          <div>
@@ -41343,14 +42337,72 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.Channel-createMcuConnection'>&nbsp;</span>**/
         /**
          <div>
-         Creates an audio/video MCU connection.
+         Creates an audio/data MCU connection with a specific media
+         identifier that can be targeted by SFU downstream connections.
+         The media identifer is only relevant if this connection will send media.
          </div>
 
         @param {fm.liveswitch.AudioStream} audioStream The audio stream.
-        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @param {string} mediaId The media identifier, unique to this channel, for persistent SFU downstream connections.
         @return {fm.liveswitch.McuConnection}
         */
-        createMcuConnection(audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream): fm.liveswitch.McuConnection;
+        createMcuConnection(audioStream: fm.liveswitch.AudioStream, dataStream: fm.liveswitch.DataStream, mediaId: string): fm.liveswitch.McuConnection;
+        /**<span id='method-fm.liveswitch.Channel-createPeerConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio-only peer connection in the offering role.
+         </div>
+
+        @param {fm.liveswitch.ClientInfo} remoteClientInfo The remote client information.
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @return {fm.liveswitch.PeerConnection}
+        */
+        createPeerConnection(remoteClientInfo: fm.liveswitch.ClientInfo, audioStream: fm.liveswitch.AudioStream): fm.liveswitch.PeerConnection;
+        /**<span id='method-fm.liveswitch.Channel-createPeerConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a video-only peer connection in the answering role.
+         </div>
+
+        @param {fm.liveswitch.PeerConnectionOffer} peerConnectionOffer The peer connection offer.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @return {fm.liveswitch.PeerConnection}
+        */
+        createPeerConnection(peerConnectionOffer: fm.liveswitch.PeerConnectionOffer, videoStream: fm.liveswitch.VideoStream): fm.liveswitch.PeerConnection;
+        /**<span id='method-fm.liveswitch.Channel-createPeerConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a video-only peer connection in the offering role.
+         </div>
+
+        @param {fm.liveswitch.ClientInfo} remoteClientInfo The remote client information.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @return {fm.liveswitch.PeerConnection}
+        */
+        createPeerConnection(remoteClientInfo: fm.liveswitch.ClientInfo, videoStream: fm.liveswitch.VideoStream): fm.liveswitch.PeerConnection;
+        /**<span id='method-fm.liveswitch.Channel-createPeerConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a data-only peer connection in the answering role.
+         </div>
+
+        @param {fm.liveswitch.PeerConnectionOffer} peerConnectionOffer The peer connection offer.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.PeerConnection}
+        */
+        createPeerConnection(peerConnectionOffer: fm.liveswitch.PeerConnectionOffer, dataStream: fm.liveswitch.DataStream): fm.liveswitch.PeerConnection;
+        /**<span id='method-fm.liveswitch.Channel-createPeerConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio-only peer connection in the answering role.
+         </div>
+
+        @param {fm.liveswitch.PeerConnectionOffer} peerConnectionOffer The peer connection offer.
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @return {fm.liveswitch.PeerConnection}
+        */
+        createPeerConnection(peerConnectionOffer: fm.liveswitch.PeerConnectionOffer, audioStream: fm.liveswitch.AudioStream): fm.liveswitch.PeerConnection;
         /**<span id='method-fm.liveswitch.Channel-createPeerConnection'>&nbsp;</span>**/
         /**
          <div>
@@ -41366,47 +42418,64 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.Channel-createPeerConnection'>&nbsp;</span>**/
         /**
          <div>
-         Creates a video-only peer connection in the answering role.
+         Creates a video/data peer connection in the answering role.
          </div>
 
         @param {fm.liveswitch.PeerConnectionOffer} peerConnectionOffer The peer connection offer.
         @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
         @return {fm.liveswitch.PeerConnection}
         */
-        createPeerConnection(peerConnectionOffer: fm.liveswitch.PeerConnectionOffer, videoStream: fm.liveswitch.VideoStream): fm.liveswitch.PeerConnection;
+        createPeerConnection(peerConnectionOffer: fm.liveswitch.PeerConnectionOffer, videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.PeerConnection;
         /**<span id='method-fm.liveswitch.Channel-createPeerConnection'>&nbsp;</span>**/
         /**
          <div>
-         Creates an audio-only peer connection in the offering role.
-         </div>
-
-        @param {fm.liveswitch.ClientInfo} remoteClientInfo The remote client information.
-        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
-        @return {fm.liveswitch.PeerConnection}
-        */
-        createPeerConnection(remoteClientInfo: fm.liveswitch.ClientInfo, audioStream: fm.liveswitch.AudioStream): fm.liveswitch.PeerConnection;
-        /**<span id='method-fm.liveswitch.Channel-createPeerConnection'>&nbsp;</span>**/
-        /**
-         <div>
-         Creates an audio-only peer connection in the answering role.
+         Creates an audio/data peer connection in the answering role.
          </div>
 
         @param {fm.liveswitch.PeerConnectionOffer} peerConnectionOffer The peer connection offer.
         @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
         @return {fm.liveswitch.PeerConnection}
         */
-        createPeerConnection(peerConnectionOffer: fm.liveswitch.PeerConnectionOffer, audioStream: fm.liveswitch.AudioStream): fm.liveswitch.PeerConnection;
+        createPeerConnection(peerConnectionOffer: fm.liveswitch.PeerConnectionOffer, audioStream: fm.liveswitch.AudioStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.PeerConnection;
         /**<span id='method-fm.liveswitch.Channel-createPeerConnection'>&nbsp;</span>**/
         /**
          <div>
-         Creates a video-only peer connection in the offering role.
+         Creates an audio/video/data peer connection in the offering role.
          </div>
 
         @param {fm.liveswitch.ClientInfo} remoteClientInfo The remote client information.
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
         @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
         @return {fm.liveswitch.PeerConnection}
         */
-        createPeerConnection(remoteClientInfo: fm.liveswitch.ClientInfo, videoStream: fm.liveswitch.VideoStream): fm.liveswitch.PeerConnection;
+        createPeerConnection(remoteClientInfo: fm.liveswitch.ClientInfo, audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.PeerConnection;
+        /**<span id='method-fm.liveswitch.Channel-createPeerConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio/video/data peer connection in the answering role.
+         </div>
+
+        @param {fm.liveswitch.PeerConnectionOffer} peerConnectionOffer The peer connection offer.
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.PeerConnection}
+        */
+        createPeerConnection(peerConnectionOffer: fm.liveswitch.PeerConnectionOffer, audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.PeerConnection;
+        /**<span id='method-fm.liveswitch.Channel-createPeerConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a data-only peer connection in the offering role.
+         </div>
+
+        @param {fm.liveswitch.ClientInfo} remoteClientInfo The remote client information.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.PeerConnection}
+        */
+        createPeerConnection(remoteClientInfo: fm.liveswitch.ClientInfo, dataStream: fm.liveswitch.DataStream): fm.liveswitch.PeerConnection;
         /**<span id='method-fm.liveswitch.Channel-createPeerConnection'>&nbsp;</span>**/
         /**
          <div>
@@ -41419,21 +42488,129 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.PeerConnection}
         */
         createPeerConnection(remoteClientInfo: fm.liveswitch.ClientInfo, audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream): fm.liveswitch.PeerConnection;
+        /**<span id='method-fm.liveswitch.Channel-createPeerConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a video/data peer connection in the offering role.
+         </div>
+
+        @param {fm.liveswitch.ClientInfo} remoteClientInfo The remote client information.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.PeerConnection}
+        */
+        createPeerConnection(remoteClientInfo: fm.liveswitch.ClientInfo, videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.PeerConnection;
+        /**<span id='method-fm.liveswitch.Channel-createPeerConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio/data peer connection in the offering role.
+         </div>
+
+        @param {fm.liveswitch.ClientInfo} remoteClientInfo The remote client information.
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.PeerConnection}
+        */
+        createPeerConnection(remoteClientInfo: fm.liveswitch.ClientInfo, audioStream: fm.liveswitch.AudioStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.PeerConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuDownstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio/video SFU downstream connection.
+         </div>
+
+        @param {string} remoteMediaId The remote media identifier.
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @return {fm.liveswitch.SfuDownstreamConnection}
+        */
+        createSfuDownstreamConnection(remoteMediaId: string, audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream): fm.liveswitch.SfuDownstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuDownstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a data-only SFU downstream connection.
+         </div>
+
+        @param {string} remoteMediaId The remote media identifier.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.SfuDownstreamConnection}
+        */
+        createSfuDownstreamConnection(remoteMediaId: string, dataStream: fm.liveswitch.DataStream): fm.liveswitch.SfuDownstreamConnection;
         /**<span id='method-fm.liveswitch.Channel-createSfuDownstreamConnection'>&nbsp;</span>**/
         /**
          <div>
          Creates a video-only SFU downstream connection.
          </div>
 
-        @param {fm.liveswitch.ConnectionInfo} remoteConnectionInfo The remote connection information.
+        @param {string} remoteMediaId The remote media identifier.
         @param {fm.liveswitch.VideoStream} videoStream The video stream.
         @return {fm.liveswitch.SfuDownstreamConnection}
         */
-        createSfuDownstreamConnection(remoteConnectionInfo: fm.liveswitch.ConnectionInfo, videoStream: fm.liveswitch.VideoStream): fm.liveswitch.SfuDownstreamConnection;
+        createSfuDownstreamConnection(remoteMediaId: string, videoStream: fm.liveswitch.VideoStream): fm.liveswitch.SfuDownstreamConnection;
         /**<span id='method-fm.liveswitch.Channel-createSfuDownstreamConnection'>&nbsp;</span>**/
         /**
          <div>
-         Creates an audio/video SFU downstream connection.
+         Creates an audio/video/data SFU downstream connection.
+         </div>
+
+        @param {string} remoteMediaId The remote media identifier.
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.SfuDownstreamConnection}
+        */
+        createSfuDownstreamConnection(remoteMediaId: string, audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.SfuDownstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuDownstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a video/data SFU downstream connection.
+         </div>
+
+        @param {string} remoteMediaId The remote media identifier.
+        @param {fm.liveswitch.VideoStream} videoStream The audio stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.SfuDownstreamConnection}
+        */
+        createSfuDownstreamConnection(remoteMediaId: string, videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.SfuDownstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuDownstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio/data SFU downstream connection.
+         </div>
+
+        @param {string} remoteMediaId The remote media identifier.
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.SfuDownstreamConnection}
+        */
+        createSfuDownstreamConnection(remoteMediaId: string, audioStream: fm.liveswitch.AudioStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.SfuDownstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuDownstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio-only SFU downstream connection to the SFU or MCU
+         upstream connection with the remote media identifier.
+         </div>
+
+        @param {string} remoteMediaId The remote media identifier.
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @return {fm.liveswitch.SfuDownstreamConnection}
+        */
+        createSfuDownstreamConnection(remoteMediaId: string, audioStream: fm.liveswitch.AudioStream): fm.liveswitch.SfuDownstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuDownstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a data-only SFU downstream connection.
+         </div>
+
+        @param {fm.liveswitch.ConnectionInfo} remoteConnectionInfo The remote connection information.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.SfuDownstreamConnection}
+        */
+        createSfuDownstreamConnection(remoteConnectionInfo: fm.liveswitch.ConnectionInfo, dataStream: fm.liveswitch.DataStream): fm.liveswitch.SfuDownstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuDownstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio/video SFU downstream connection to the SFU or MCU
+         upstream connection identified by the remote connection info.
          </div>
 
         @param {fm.liveswitch.ConnectionInfo} remoteConnectionInfo The remote connection information.
@@ -41445,7 +42622,32 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.Channel-createSfuDownstreamConnection'>&nbsp;</span>**/
         /**
          <div>
-         Creates an audio-only SFU downstream connection.
+         Creates an audio/data SFU downstream connection.
+         </div>
+
+        @param {fm.liveswitch.ConnectionInfo} remoteConnectionInfo The remote connection information.
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.SfuDownstreamConnection}
+        */
+        createSfuDownstreamConnection(remoteConnectionInfo: fm.liveswitch.ConnectionInfo, audioStream: fm.liveswitch.AudioStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.SfuDownstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuDownstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a video/data SFU downstream connection.
+         </div>
+
+        @param {fm.liveswitch.ConnectionInfo} remoteConnectionInfo The remote connection information.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.SfuDownstreamConnection}
+        */
+        createSfuDownstreamConnection(remoteConnectionInfo: fm.liveswitch.ConnectionInfo, videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.SfuDownstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuDownstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio-only SFU downstream connection to the SFU or MCU
+         upstream connection identified by the remote connection info.
          </div>
 
         @param {fm.liveswitch.ConnectionInfo} remoteConnectionInfo The remote connection information.
@@ -41453,6 +42655,65 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.SfuDownstreamConnection}
         */
         createSfuDownstreamConnection(remoteConnectionInfo: fm.liveswitch.ConnectionInfo, audioStream: fm.liveswitch.AudioStream): fm.liveswitch.SfuDownstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuDownstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a video-only SFU downstream connection to the SFU or MCU
+         upstream connection identified by the remote connection info.
+         </div>
+
+        @param {fm.liveswitch.ConnectionInfo} remoteConnectionInfo The remote connection information.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @return {fm.liveswitch.SfuDownstreamConnection}
+        */
+        createSfuDownstreamConnection(remoteConnectionInfo: fm.liveswitch.ConnectionInfo, videoStream: fm.liveswitch.VideoStream): fm.liveswitch.SfuDownstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuDownstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio/video/data SFU downstream connection.
+         </div>
+
+        @param {fm.liveswitch.ConnectionInfo} remoteConnectionInfo The remote connection information.
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.SfuDownstreamConnection}
+        */
+        createSfuDownstreamConnection(remoteConnectionInfo: fm.liveswitch.ConnectionInfo, audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.SfuDownstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuUpstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio/data SFU upstream connection.
+         </div>
+
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.SfuUpstreamConnection}
+        */
+        createSfuUpstreamConnection(audioStream: fm.liveswitch.AudioStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.SfuUpstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuUpstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a video/data SFU upstream connection.
+         </div>
+
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.SfuUpstreamConnection}
+        */
+        createSfuUpstreamConnection(videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.SfuUpstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuUpstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio/video/data SFU upstream connection.
+         </div>
+
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.SfuUpstreamConnection}
+        */
+        createSfuUpstreamConnection(audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.SfuUpstreamConnection;
         /**<span id='method-fm.liveswitch.Channel-createSfuUpstreamConnection'>&nbsp;</span>**/
         /**
          <div>
@@ -41484,6 +42745,105 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.SfuUpstreamConnection}
         */
         createSfuUpstreamConnection(videoStream: fm.liveswitch.VideoStream): fm.liveswitch.SfuUpstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuUpstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a data-only SFU upstream connection.
+         </div>
+
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.SfuUpstreamConnection}
+        */
+        createSfuUpstreamConnection(dataStream: fm.liveswitch.DataStream): fm.liveswitch.SfuUpstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuUpstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio/data SFU upstream connection with a specific media
+         identifier that can be targeted by SFU downstream connections.
+         </div>
+
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @param {string} mediaId The media identifier, unique to this channel, for persistent SFU downstream connections.
+        @return {fm.liveswitch.SfuUpstreamConnection}
+        */
+        createSfuUpstreamConnection(audioStream: fm.liveswitch.AudioStream, dataStream: fm.liveswitch.DataStream, mediaId: string): fm.liveswitch.SfuUpstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuUpstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a video/data SFU upstream connection with a specific media
+         identifier that can be targeted by SFU downstream connections.
+         </div>
+
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @param {string} mediaId The media identifier, unique to this channel, for persistent SFU downstream connections.
+        @return {fm.liveswitch.SfuUpstreamConnection}
+        */
+        createSfuUpstreamConnection(videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream, mediaId: string): fm.liveswitch.SfuUpstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuUpstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio/video SFU upstream connection with a specific media
+         identifier that can be targeted by SFU downstream connections.
+         </div>
+
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The video stream.
+        @param {string} mediaId The media identifier, unique to this channel, for persistent SFU downstream connections.
+        @return {fm.liveswitch.SfuUpstreamConnection}
+        */
+        createSfuUpstreamConnection(audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream, mediaId: string): fm.liveswitch.SfuUpstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuUpstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio/video SFU upstream connection with a specific media
+         identifier that can be targeted by SFU downstream connections.
+         </div>
+
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {string} mediaId The media identifier, unique to this channel, for persistent SFU downstream connections.
+        @return {fm.liveswitch.SfuUpstreamConnection}
+        */
+        createSfuUpstreamConnection(audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream, mediaId: string): fm.liveswitch.SfuUpstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuUpstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an audio-only SFU upstream connection with a specific media
+         identifier that can be targeted by SFU downstream connections.
+         </div>
+
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {string} mediaId The media identifier, unique to this channel, for persistent SFU downstream connections.
+        @return {fm.liveswitch.SfuUpstreamConnection}
+        */
+        createSfuUpstreamConnection(audioStream: fm.liveswitch.AudioStream, mediaId: string): fm.liveswitch.SfuUpstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuUpstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a video-only SFU upstream connection with a specific media
+         identifier that can be targeted by SFU downstream connections.
+         </div>
+
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {string} mediaId The media identifier, unique to this channel, for persistent SFU downstream connections.
+        @return {fm.liveswitch.SfuUpstreamConnection}
+        */
+        createSfuUpstreamConnection(videoStream: fm.liveswitch.VideoStream, mediaId: string): fm.liveswitch.SfuUpstreamConnection;
+        /**<span id='method-fm.liveswitch.Channel-createSfuUpstreamConnection'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates a data-only SFU upstream connection with a specific media
+         identifier that can be targeted by SFU downstream connections.
+         </div>
+
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @param {string} mediaId The media identifier, unique to this channel, for persistent SFU downstream connections.
+        @return {fm.liveswitch.SfuUpstreamConnection}
+        */
+        createSfuUpstreamConnection(dataStream: fm.liveswitch.DataStream, mediaId: string): fm.liveswitch.SfuUpstreamConnection;
         /**<span id='method-fm.liveswitch.Channel-getApplicationId'>&nbsp;</span>**/
         /**
          <div>
@@ -41751,10 +43111,10 @@ declare namespace fm.liveswitch {
          </div>
 
 
-        @param {fm.liveswitch.IAction2<fm.liveswitch.ClientInfo,fm.liveswitch.ClientConfig>} value
+        @param {fm.liveswitch.IAction2<fm.liveswitch.ClientInfo,fm.liveswitch.ClientInfo>} value
         @return {void}
         */
-        removeOnRemoteClientUpdate(value: fm.liveswitch.IAction2<fm.liveswitch.ClientInfo, fm.liveswitch.ClientConfig>): void;
+        removeOnRemoteClientUpdate(value: fm.liveswitch.IAction2<fm.liveswitch.ClientInfo, fm.liveswitch.ClientInfo>): void;
         /**<span id='method-fm.liveswitch.Channel-removeOnRemoteUpstreamConnectionClose'>&nbsp;</span>**/
         /**
          <div>
@@ -41869,7 +43229,7 @@ declare namespace fm.liveswitch {
     */
     class Client extends fm.liveswitch.Dynamic {
         getTypeString(): string;
-        private fmliveswitchClientInit();
+        private fmliveswitchClientInit;
         /**<span id='method-fm.liveswitch.Client-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -41878,9 +43238,13 @@ declare namespace fm.liveswitch {
 
         @param {string} gatewayUrl The gateway URL.
         @param {string} applicationId The application identifier.
+        @param {string} userId The user identifier, or null to auto-generate.
+        @param {string} deviceId The device identifier, or null to auto-generate.
+        @param {string} clientId The client identifier, or null to auto-generate.
+        @param {string[]} roles The roles, if any.
         @return {}
         */
-        constructor(gatewayUrl: string, applicationId: string);
+        constructor(gatewayUrl: string, applicationId: string, userId: string, deviceId: string, clientId: string, roles: string[]);
         /**<span id='method-fm.liveswitch.Client-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -41903,13 +43267,9 @@ declare namespace fm.liveswitch {
 
         @param {string} gatewayUrl The gateway URL.
         @param {string} applicationId The application identifier.
-        @param {string} userId The user identifier, or null to auto-generate.
-        @param {string} deviceId The device identifier, or null to auto-generate.
-        @param {string} clientId The client identifier, or null to auto-generate.
-        @param {string[]} roles The roles, if any.
         @return {}
         */
-        constructor(gatewayUrl: string, applicationId: string, userId: string, deviceId: string, clientId: string, roles: string[]);
+        constructor(gatewayUrl: string, applicationId: string);
         /**<span id='method-fm.liveswitch.Client-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -42025,6 +43385,16 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.Channel[]}
         */
         getChannels(): fm.liveswitch.Channel[];
+        /**<span id='method-fm.liveswitch.Client-getConfig'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the current configuration.
+         </div>
+
+
+        @return {fm.liveswitch.ClientConfig}
+        */
+        getConfig(): fm.liveswitch.ClientConfig;
         /**<span id='method-fm.liveswitch.Client-getDeviceAlias'>&nbsp;</span>**/
         /**
          <div>
@@ -42116,6 +43486,16 @@ declare namespace fm.liveswitch {
         @return {string}
         */
         getId(): string;
+        /**<span id='method-fm.liveswitch.Client-getInfo'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the client info.
+         </div>
+
+
+        @return {fm.liveswitch.ClientInfo}
+        */
+        getInfo(): fm.liveswitch.ClientInfo;
         /**<span id='method-fm.liveswitch.Client-getRequestTimeout'>&nbsp;</span>**/
         /**
          <div>
@@ -42184,6 +43564,18 @@ declare namespace fm.liveswitch {
          Joins a channel.
          </div>
 
+        @param {string} token The auth token.
+        @return {fm.liveswitch.Future<fm.liveswitch.Channel>}
+         A future with the joined channel.
+ 
+        */
+        join(token: string): fm.liveswitch.Future<fm.liveswitch.Channel>;
+        /**<span id='method-fm.liveswitch.Client-join'>&nbsp;</span>**/
+        /**
+         <div>
+         Joins a channel.
+         </div>
+
         @param {string} channelId The channel identifier.
         @param {string} token The auth token.
         @return {fm.liveswitch.Future<fm.liveswitch.Channel>}
@@ -42191,18 +43583,6 @@ declare namespace fm.liveswitch {
  
         */
         join(channelId: string, token: string): fm.liveswitch.Future<fm.liveswitch.Channel>;
-        /**<span id='method-fm.liveswitch.Client-join'>&nbsp;</span>**/
-        /**
-         <div>
-         Joins a channel.
-         </div>
-
-        @param {string} token The auth token.
-        @return {fm.liveswitch.Future<fm.liveswitch.Channel>}
-         A future with the joined channel.
- 
-        */
-        join(token: string): fm.liveswitch.Future<fm.liveswitch.Channel>;
         /**<span id='method-fm.liveswitch.Client-leave'>&nbsp;</span>**/
         /**
          <div>
@@ -42422,7 +43802,7 @@ declare namespace fm.liveswitch {
     */
     class Invitation {
         getTypeString(): string;
-        private fmliveswitchInvitationInit();
+        private fmliveswitchInvitationInit;
         /**<span id='method-fm.liveswitch.Invitation-addOnStateChanging'>&nbsp;</span>**/
         /**
          <div>
@@ -42562,20 +43942,20 @@ declare namespace fm.liveswitch {
          Gets a connection by ID.
          </div>
 
-        @param {string} id The identifier.
+        @param {string} idValue The identifier.
         @return {fm.liveswitch.ManagedConnection} The connection, or null if the connection does not exist.
         */
-        getById(id: string): fm.liveswitch.ManagedConnection;
+        getById(idValue: string): fm.liveswitch.ManagedConnection;
         /**<span id='method-fm.liveswitch.ManagedConnectionCollection-getByRemoteId'>&nbsp;</span>**/
         /**
          <div>
          Gets a connection by remote ID.
          </div>
 
-        @param {string} id The identifier.
+        @param {string} idValue The identifier.
         @return {fm.liveswitch.ManagedConnection} The connection, or null if the connection does not exist.
         */
-        getByRemoteId(id: string): fm.liveswitch.ManagedConnection;
+        getByRemoteId(idValue: string): fm.liveswitch.ManagedConnection;
         /**<span id='method-fm.liveswitch.ManagedConnectionCollection-removeSuccess'>&nbsp;</span>**/
         /**
          <div>
@@ -42592,22 +43972,22 @@ declare namespace fm.liveswitch {
          Tries to get a connection by ID.
          </div>
 
-        @param {string} id The identifier.
+        @param {string} idValue The identifier.
         @param {fm.liveswitch.Holder<fm.liveswitch.ManagedConnection>} connection The connection.
         @return {boolean} The connection, or null if the connection does not exist.
         */
-        tryGetById(id: string, connection: fm.liveswitch.Holder<fm.liveswitch.ManagedConnection>): boolean;
+        tryGetById(idValue: string, connection: fm.liveswitch.Holder<fm.liveswitch.ManagedConnection>): boolean;
         /**<span id='method-fm.liveswitch.ManagedConnectionCollection-tryGetByRemoteId'>&nbsp;</span>**/
         /**
          <div>
          Tries to get a connection by remote ID.
          </div>
 
-        @param {string} id The identifier.
+        @param {string} idValue The identifier.
         @param {fm.liveswitch.Holder<fm.liveswitch.ManagedConnection>} connection The connection.
         @return {boolean} The connection, or null if the connection does not exist.
         */
-        tryGetByRemoteId(id: string, connection: fm.liveswitch.Holder<fm.liveswitch.ManagedConnection>): boolean;
+        tryGetByRemoteId(idValue: string, connection: fm.liveswitch.Holder<fm.liveswitch.ManagedConnection>): boolean;
     }
 }
 declare namespace fm.liveswitch {
@@ -42619,7 +43999,7 @@ declare namespace fm.liveswitch {
     */
     abstract class ManagedConnection extends fm.liveswitch.Dynamic {
         getTypeString(): string;
-        private fmliveswitchManagedConnectionInit();
+        private fmliveswitchManagedConnectionInit;
         /**<span id='method-fm.liveswitch.ManagedConnection-addOnGatheringStateChange'>&nbsp;</span>**/
         /**
          <div>
@@ -42792,6 +44172,26 @@ declare namespace fm.liveswitch {
         @return {string}
         */
         getClientId(): string;
+        /**<span id='method-fm.liveswitch.ManagedConnection-getConfig'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the current configuration.
+         </div>
+
+
+        @return {fm.liveswitch.ConnectionConfig}
+        */
+        getConfig(): fm.liveswitch.ConnectionConfig;
+        /**<span id='method-fm.liveswitch.ManagedConnection-getDataDirection'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the data direction. Null if disabled.
+         </div>
+
+
+        @return {string}
+        */
+        getDataDirection(): string;
         /**<span id='method-fm.liveswitch.ManagedConnection-getDataStream'>&nbsp;</span>**/
         /**
          <div>
@@ -42912,6 +44312,16 @@ declare namespace fm.liveswitch {
         @return {string}
         */
         getId(): string;
+        /**<span id='method-fm.liveswitch.ManagedConnection-getInfo'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the connection info.
+         </div>
+
+
+        @return {fm.liveswitch.ConnectionInfo}
+        */
+        getInfo(): fm.liveswitch.ConnectionInfo;
         /**<span id='method-fm.liveswitch.ManagedConnection-getLocalAudioDisabled'>&nbsp;</span>**/
         /**
          <div>
@@ -42922,6 +44332,16 @@ declare namespace fm.liveswitch {
         @return {boolean}
         */
         getLocalAudioDisabled(): boolean;
+        /**<span id='method-fm.liveswitch.ManagedConnection-getLocalAudioFormats'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the local audio formats.
+         </div>
+
+
+        @return {fm.liveswitch.FormatInfo[]}
+        */
+        getLocalAudioFormats(): fm.liveswitch.FormatInfo[];
         /**<span id='method-fm.liveswitch.ManagedConnection-getLocalAudioMuted'>&nbsp;</span>**/
         /**
          <div>
@@ -42932,6 +44352,16 @@ declare namespace fm.liveswitch {
         @return {boolean}
         */
         getLocalAudioMuted(): boolean;
+        /**<span id='method-fm.liveswitch.ManagedConnection-getLocalDataDisabled'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets if local data is disabled.
+         </div>
+
+
+        @return {boolean}
+        */
+        getLocalDataDisabled(): boolean;
         /**<span id='method-fm.liveswitch.ManagedConnection-getLocalDescription'>&nbsp;</span>**/
         /**
          <div>
@@ -42952,6 +44382,16 @@ declare namespace fm.liveswitch {
         @return {boolean}
         */
         getLocalVideoDisabled(): boolean;
+        /**<span id='method-fm.liveswitch.ManagedConnection-getLocalVideoFormats'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the local video formats.
+         </div>
+
+
+        @return {fm.liveswitch.FormatInfo[]}
+        */
+        getLocalVideoFormats(): fm.liveswitch.FormatInfo[];
         /**<span id='method-fm.liveswitch.ManagedConnection-getLocalVideoMuted'>&nbsp;</span>**/
         /**
          <div>
@@ -42962,6 +44402,16 @@ declare namespace fm.liveswitch {
         @return {boolean}
         */
         getLocalVideoMuted(): boolean;
+        /**<span id='method-fm.liveswitch.ManagedConnection-getMediaId'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the media identifier.
+         </div>
+
+
+        @return {string}
+        */
+        getMediaId(): string;
         /**<span id='method-fm.liveswitch.ManagedConnection-getRemoteAudioDisabled'>&nbsp;</span>**/
         /**
          <div>
@@ -42972,6 +44422,16 @@ declare namespace fm.liveswitch {
         @return {boolean}
         */
         getRemoteAudioDisabled(): boolean;
+        /**<span id='method-fm.liveswitch.ManagedConnection-getRemoteAudioFormats'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the remote audio formats.
+         </div>
+
+
+        @return {fm.liveswitch.FormatInfo[]}
+        */
+        getRemoteAudioFormats(): fm.liveswitch.FormatInfo[];
         /**<span id='method-fm.liveswitch.ManagedConnection-getRemoteAudioMuted'>&nbsp;</span>**/
         /**
          <div>
@@ -42996,13 +44456,23 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.ManagedConnection-getRemoteConnectionId'>&nbsp;</span>**/
         /**
          <div>
-         Gets the remote connection id if available.
+         Gets the remote connection identifier, if available.
          </div>
 
 
         @return {string}
         */
-        abstract getRemoteConnectionId(): string;
+        getRemoteConnectionId(): string;
+        /**<span id='method-fm.liveswitch.ManagedConnection-getRemoteDataDisabled'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets if remote data is disabled.
+         </div>
+
+
+        @return {boolean}
+        */
+        getRemoteDataDisabled(): boolean;
         /**<span id='method-fm.liveswitch.ManagedConnection-getRemoteDescription'>&nbsp;</span>**/
         /**
          <div>
@@ -43013,6 +44483,16 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.SessionDescription}
         */
         getRemoteDescription(): fm.liveswitch.SessionDescription;
+        /**<span id='method-fm.liveswitch.ManagedConnection-getRemoteMediaId'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the remote media identifier, if available.
+         </div>
+
+
+        @return {string}
+        */
+        getRemoteMediaId(): string;
         /**<span id='method-fm.liveswitch.ManagedConnection-getRemoteRejected'>&nbsp;</span>**/
         /**
          <div>
@@ -43024,6 +44504,16 @@ declare namespace fm.liveswitch {
         @return {boolean}
         */
         getRemoteRejected(): boolean;
+        /**<span id='method-fm.liveswitch.ManagedConnection-getRemoteTag'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the remote tag, if applicable.
+         </div>
+
+
+        @return {string}
+        */
+        getRemoteTag(): string;
         /**<span id='method-fm.liveswitch.ManagedConnection-getRemoteVideoDisabled'>&nbsp;</span>**/
         /**
          <div>
@@ -43034,6 +44524,16 @@ declare namespace fm.liveswitch {
         @return {boolean}
         */
         getRemoteVideoDisabled(): boolean;
+        /**<span id='method-fm.liveswitch.ManagedConnection-getRemoteVideoFormats'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the remote video formats.
+         </div>
+
+
+        @return {fm.liveswitch.FormatInfo[]}
+        */
+        getRemoteVideoFormats(): fm.liveswitch.FormatInfo[];
         /**<span id='method-fm.liveswitch.ManagedConnection-getRemoteVideoMuted'>&nbsp;</span>**/
         /**
          <div>
@@ -43133,6 +44633,16 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.VideoStream}
         */
         getVideoStream(): fm.liveswitch.VideoStream;
+        /**<span id='method-fm.liveswitch.ManagedConnection-isMediaDirectionAllowed'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets a value indicating whether the given direction is allowed for this connection.
+         </div>
+
+        @param {string} direction The direction.
+        @return {boolean}
+        */
+        protected abstract isMediaDirectionAllowed(direction: string): boolean;
         /**<span id='method-fm.liveswitch.ManagedConnection-open'>&nbsp;</span>**/
         /**
          <div>
@@ -43153,17 +44663,6 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         protected processAnswer(message: fm.liveswitch.Message): void;
-        /**<span id='method-fm.liveswitch.ManagedConnection-raiseRemoteUpdate'>&nbsp;</span>**/
-        /**
-         <div>
-         Raises the OnRemoteUpdate event.
-         </div>
-
-        @param {fm.liveswitch.ConnectionInfo} oldConnectionInfo The old connection info.
-        @param {fm.liveswitch.ConnectionInfo} newConnectionInfo The new connection info.
-        @return {void}
-        */
-        protected raiseRemoteUpdate(oldConnectionInfo: fm.liveswitch.ConnectionInfo, newConnectionInfo: fm.liveswitch.ConnectionInfo): void;
         /**<span id='method-fm.liveswitch.ManagedConnection-removeOnGatheringStateChange'>&nbsp;</span>**/
         /**
          <div>
@@ -43227,18 +44726,6 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         removeOnStateChange(value: fm.liveswitch.IAction1<fm.liveswitch.ManagedConnection>): void;
-        /**<span id='method-fm.liveswitch.ManagedConnection-selfRenegotiate'>&nbsp;</span>**/
-        /**
-         <div>
-         Does a local only renegotiation for the streams.
-         </div>
-
-        @param {boolean} isRemote Is this a renegotiation on the remote side.
-        @param {boolean} isAudioDisabled Is audio disabled?
-        @param {boolean} isVideoDisabled Is video disabled?
-        @return {void}
-        */
-        protected selfRenegotiate(isRemote: boolean, isAudioDisabled: boolean, isVideoDisabled: boolean): void;
         /**<span id='method-fm.liveswitch.ManagedConnection-send'>&nbsp;</span>**/
         /**
          <div>
@@ -43282,6 +44769,50 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         setIceServers(value: fm.liveswitch.IceServer[]): void;
+        /**<span id='method-fm.liveswitch.ManagedConnection-setLocalAudioFormats'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the local audio formats.
+         </div>
+
+
+        @param {fm.liveswitch.FormatInfo[]} value
+        @return {void}
+        */
+        protected setLocalAudioFormats(value: fm.liveswitch.FormatInfo[]): void;
+        /**<span id='method-fm.liveswitch.ManagedConnection-setLocalVideoFormats'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the local video formats.
+         </div>
+
+
+        @param {fm.liveswitch.FormatInfo[]} value
+        @return {void}
+        */
+        protected setLocalVideoFormats(value: fm.liveswitch.FormatInfo[]): void;
+        /**<span id='method-fm.liveswitch.ManagedConnection-setMediaId'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the media identifier.
+         </div>
+
+
+        @param {string} value
+        @return {void}
+        */
+        protected setMediaId(value: string): void;
+        /**<span id='method-fm.liveswitch.ManagedConnection-setRemoteAudioFormats'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the remote audio formats.
+         </div>
+
+
+        @param {fm.liveswitch.FormatInfo[]} value
+        @return {void}
+        */
+        protected setRemoteAudioFormats(value: fm.liveswitch.FormatInfo[]): void;
         /**<span id='method-fm.liveswitch.ManagedConnection-setRemoteAudioMuted'>&nbsp;</span>**/
         /**
          <div>
@@ -43293,6 +44824,50 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         protected setRemoteAudioMuted(value: boolean): void;
+        /**<span id='method-fm.liveswitch.ManagedConnection-setRemoteConnectionId'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the remote connection identifier, if available.
+         </div>
+
+
+        @param {string} value
+        @return {void}
+        */
+        protected setRemoteConnectionId(value: string): void;
+        /**<span id='method-fm.liveswitch.ManagedConnection-setRemoteMediaId'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the remote media identifier, if available.
+         </div>
+
+
+        @param {string} value
+        @return {void}
+        */
+        protected setRemoteMediaId(value: string): void;
+        /**<span id='method-fm.liveswitch.ManagedConnection-setRemoteTag'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the remote tag, if applicable.
+         </div>
+
+
+        @param {string} value
+        @return {void}
+        */
+        protected setRemoteTag(value: string): void;
+        /**<span id='method-fm.liveswitch.ManagedConnection-setRemoteVideoFormats'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the remote video formats.
+         </div>
+
+
+        @param {fm.liveswitch.FormatInfo[]} value
+        @return {void}
+        */
+        protected setRemoteVideoFormats(value: fm.liveswitch.FormatInfo[]): void;
         /**<span id='method-fm.liveswitch.ManagedConnection-setRemoteVideoMuted'>&nbsp;</span>**/
         /**
          <div>
@@ -43330,8 +44905,7 @@ declare namespace fm.liveswitch {
 declare namespace fm.liveswitch {
     /**
      <div>
-     Utility to assist with managing the layout
-     of a combined video feed.
+     Utility to assist with managing the layout of a combined video feed.
      </div>
 
     */
@@ -43436,16 +45010,6 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         protected doProcessMessage(message: fm.liveswitch.Message): void;
-        /**<span id='method-fm.liveswitch.ServerConnection-getRemoteConnectionId'>&nbsp;</span>**/
-        /**
-         <div>
-         Gets the remote connection id if available.
-         </div>
-
-
-        @return {string}
-        */
-        getRemoteConnectionId(): string;
     }
 }
 declare namespace fm.liveswitch {
@@ -43467,6 +45031,16 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.Message}
         */
         protected doCreateOfferMessage(offer: fm.liveswitch.SessionDescription): fm.liveswitch.Message;
+        /**<span id='method-fm.liveswitch.McuConnection-isMediaDirectionAllowed'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets a value indicating whether the given media direction is allowed for this connection.
+         </div>
+
+        @param {string} direction The direction.
+        @return {boolean}
+        */
+        protected isMediaDirectionAllowed(direction: string): boolean;
     }
 }
 declare namespace fm.liveswitch {
@@ -43538,16 +45112,6 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.ClientInfo}
         */
         getRemoteClientInfo(): fm.liveswitch.ClientInfo;
-        /**<span id='method-fm.liveswitch.PeerConnection-getRemoteConnectionId'>&nbsp;</span>**/
-        /**
-         <div>
-         Gets the remote connection identifier.
-         </div>
-
-
-        @return {string}
-        */
-        getRemoteConnectionId(): string;
         /**<span id='method-fm.liveswitch.PeerConnection-getRole'>&nbsp;</span>**/
         /**
          <div>
@@ -43558,6 +45122,16 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.PeerRole}
         */
         getRole(): fm.liveswitch.PeerRole;
+        /**<span id='method-fm.liveswitch.PeerConnection-isMediaDirectionAllowed'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets a value indicating whether the given media direction is allowed for this connection.
+         </div>
+
+        @param {string} direction The direction.
+        @return {boolean}
+        */
+        protected isMediaDirectionAllowed(direction: string): boolean;
         /**<span id='method-fm.liveswitch.PeerConnection-processAnswer'>&nbsp;</span>**/
         /**
          <div>
@@ -43589,27 +45163,36 @@ declare namespace fm.liveswitch {
     */
     class PeerConnectionOffer {
         getTypeString(): string;
-        private fmliveswitchPeerConnectionOfferInit();
+        private fmliveswitchPeerConnectionOfferInit;
         /**<span id='method-fm.liveswitch.PeerConnectionOffer-accept'>&nbsp;</span>**/
         /**
          <div>
          Accepts the offer.
          </div>
 
-
-        @param {fm.liveswitch.AudioStream} audioStream
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
         @return {fm.liveswitch.PeerConnection}
         */
-        accept(audioStream: fm.liveswitch.AudioStream): fm.liveswitch.PeerConnection;
+        accept(videoStream: fm.liveswitch.VideoStream): fm.liveswitch.PeerConnection;
         /**<span id='method-fm.liveswitch.PeerConnectionOffer-accept'>&nbsp;</span>**/
         /**
          <div>
          Accepts the offer.
          </div>
 
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.PeerConnection}
+        */
+        accept(audioStream: fm.liveswitch.AudioStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.PeerConnection;
+        /**<span id='method-fm.liveswitch.PeerConnectionOffer-accept'>&nbsp;</span>**/
+        /**
+         <div>
+         Accepts the offer.
+         </div>
 
-        @param {fm.liveswitch.AudioStream} audioStream
-        @param {fm.liveswitch.VideoStream} videoStream
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
         @return {fm.liveswitch.PeerConnection}
         */
         accept(audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream): fm.liveswitch.PeerConnection;
@@ -43619,11 +45202,43 @@ declare namespace fm.liveswitch {
          Accepts the offer.
          </div>
 
-
-        @param {fm.liveswitch.VideoStream} videoStream
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
         @return {fm.liveswitch.PeerConnection}
         */
-        accept(videoStream: fm.liveswitch.VideoStream): fm.liveswitch.PeerConnection;
+        accept(videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.PeerConnection;
+        /**<span id='method-fm.liveswitch.PeerConnectionOffer-accept'>&nbsp;</span>**/
+        /**
+         <div>
+         Accepts the offer.
+         </div>
+
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.PeerConnection}
+        */
+        accept(dataStream: fm.liveswitch.DataStream): fm.liveswitch.PeerConnection;
+        /**<span id='method-fm.liveswitch.PeerConnectionOffer-accept'>&nbsp;</span>**/
+        /**
+         <div>
+         Accepts the offer.
+         </div>
+
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @param {fm.liveswitch.VideoStream} videoStream The video stream.
+        @param {fm.liveswitch.DataStream} dataStream The data stream.
+        @return {fm.liveswitch.PeerConnection}
+        */
+        accept(audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream): fm.liveswitch.PeerConnection;
+        /**<span id='method-fm.liveswitch.PeerConnectionOffer-accept'>&nbsp;</span>**/
+        /**
+         <div>
+         Accepts the offer.
+         </div>
+
+        @param {fm.liveswitch.AudioStream} audioStream The audio stream.
+        @return {fm.liveswitch.PeerConnection}
+        */
+        accept(audioStream: fm.liveswitch.AudioStream): fm.liveswitch.PeerConnection;
         /**<span id='method-fm.liveswitch.PeerConnectionOffer-addOnCancel'>&nbsp;</span>**/
         /**
          <div>
@@ -43666,6 +45281,17 @@ declare namespace fm.liveswitch {
         @return {boolean}
         */
         getHasAudio(): boolean;
+        /**<span id='method-fm.liveswitch.PeerConnectionOffer-getHasData'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets a value indicating whether the offer
+         includes a data description.
+         </div>
+
+
+        @return {boolean}
+        */
+        getHasData(): boolean;
         /**<span id='method-fm.liveswitch.PeerConnectionOffer-getHasVideo'>&nbsp;</span>**/
         /**
          <div>
@@ -43768,6 +45394,7 @@ declare namespace fm.liveswitch {
     */
     class SfuDownstreamConnection extends fm.liveswitch.SfuConnection {
         getTypeString(): string;
+        constructor(sharedLock: Object, applicationId: string, channelId: string, userId: string, deviceId: string, clientId: string, send: fm.liveswitch.IFunction1<fm.liveswitch.Message, fm.liveswitch.Future<fm.liveswitch.Message>>, remoteMediaId: string, audioStream: fm.liveswitch.AudioStream, videoStream: fm.liveswitch.VideoStream, dataStream: fm.liveswitch.DataStream);
         /**<span id='method-fm.liveswitch.SfuDownstreamConnection-doCreateOfferMessage'>&nbsp;</span>**/
         /**
          <div>
@@ -43781,13 +45408,23 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.SfuDownstreamConnection-getRemoteConnectionInfo'>&nbsp;</span>**/
         /**
          <div>
-         Gets the remote connection information.
+         Gets the remote connection information, if available.
          </div>
 
 
         @return {fm.liveswitch.ConnectionInfo}
         */
         getRemoteConnectionInfo(): fm.liveswitch.ConnectionInfo;
+        /**<span id='method-fm.liveswitch.SfuDownstreamConnection-isMediaDirectionAllowed'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets a value indicating whether the given media direction is allowed for this connection.
+         </div>
+
+        @param {string} direction The direction.
+        @return {boolean}
+        */
+        protected isMediaDirectionAllowed(direction: string): boolean;
     }
 }
 declare namespace fm.liveswitch {
@@ -43809,6 +45446,16 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.Message}
         */
         protected doCreateOfferMessage(offer: fm.liveswitch.SessionDescription): fm.liveswitch.Message;
+        /**<span id='method-fm.liveswitch.SfuUpstreamConnection-isMediaDirectionAllowed'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets a value indicating whether the given media direction is allowed for this connection.
+         </div>
+
+        @param {string} direction The direction.
+        @return {boolean}
+        */
+        protected isMediaDirectionAllowed(direction: string): boolean;
     }
 }
 declare namespace fm.liveswitch {
@@ -43820,7 +45467,7 @@ declare namespace fm.liveswitch {
     */
     class ChannelClaim {
         getTypeString(): string;
-        private fmliveswitchChannelClaimInit();
+        private fmliveswitchChannelClaimInit;
         constructor();
         /**<span id='method-fm.liveswitch.ChannelClaim-constructor'>&nbsp;</span>**/
         /**
@@ -43828,10 +45475,10 @@ declare namespace fm.liveswitch {
          Initializes a new instance of the `fm.liveswitch.channelClaim` class.
          </div>
 
-        @param {string} id The channel identifier.
+        @param {string} idValue The channel identifier.
         @return {}
         */
-        constructor(id: string);
+        constructor(idValue: string);
         /**<span id='method-fm.liveswitch.ChannelClaim-fromJson'>&nbsp;</span>**/
         /**
          <div>
@@ -44178,7 +45825,17 @@ declare namespace fm.liveswitch {
     */
     class FormatInfo {
         getTypeString(): string;
-        private fmliveswitchFormatInfoInit();
+        private fmliveswitchFormatInfoInit;
+        /**<span id='method-fm.liveswitch.FormatInfo-constructor'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an instance of a FormatInfo from an AudioFormat.
+         </div>
+
+        @param {fm.liveswitch.AudioFormat} audioFormat The audio format.
+        @return {}
+        */
+        constructor(audioFormat: fm.liveswitch.AudioFormat);
         /**<span id='method-fm.liveswitch.FormatInfo-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -44197,20 +45854,9 @@ declare namespace fm.liveswitch {
 
         @param {string} codecName The codec name.
         @param {number} clockRate The clock rate.
-        @param {number} channelCount The channel count.
         @return {}
         */
-        constructor(codecName: string, clockRate: number, channelCount: number);
-        /**<span id='method-fm.liveswitch.FormatInfo-constructor'>&nbsp;</span>**/
-        /**
-         <div>
-         Creates an instance of a FormatInfo from an AudioFormat.
-         </div>
-
-        @param {fm.liveswitch.AudioFormat} audioFormat The audio format.
-        @return {}
-        */
-        constructor(audioFormat: fm.liveswitch.AudioFormat);
+        constructor(codecName: string, clockRate: number);
         /**<span id='method-fm.liveswitch.FormatInfo-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -44219,9 +45865,10 @@ declare namespace fm.liveswitch {
 
         @param {string} codecName The codec name.
         @param {number} clockRate The clock rate.
+        @param {number} channelCount The channel count.
         @return {}
         */
-        constructor(codecName: string, clockRate: number);
+        constructor(codecName: string, clockRate: number, channelCount: number);
         constructor();
         /**<span id='method-fm.liveswitch.FormatInfo-fromJson'>&nbsp;</span>**/
         /**
@@ -44233,6 +45880,17 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.FormatInfo} The deserialized FormatInfo.
         */
         static fromJson(formatInfoJson: string): fm.liveswitch.FormatInfo;
+        /**<span id='method-fm.liveswitch.FormatInfo-fromSdpMediaDescription'>&nbsp;</span>**/
+        /**
+         <div>
+         Converts the RTP map attributes in an SDP media description
+         to an array of FormatInfo objects.
+         </div>
+
+        @param {fm.liveswitch.sdp.MediaDescription} sdpMediaDescription The SDP media description.
+        @return {fm.liveswitch.FormatInfo[]} An array of FormatInfo objects.
+        */
+        static fromSdpMediaDescription(sdpMediaDescription: fm.liveswitch.sdp.MediaDescription): fm.liveswitch.FormatInfo[];
         /**<span id='method-fm.liveswitch.FormatInfo-toJson'>&nbsp;</span>**/
         /**
          <div>
@@ -44315,6 +45973,16 @@ declare namespace fm.liveswitch {
         @return {string}
         */
         toJson(): string;
+        /**<span id='method-fm.liveswitch.FormatInfo-toString'>&nbsp;</span>**/
+        /**
+         <div>
+         Returns a string that represents this instance.
+         </div>
+
+
+        @return {string}
+        */
+        toString(): string;
     }
 }
 declare namespace fm.liveswitch {
@@ -44438,7 +46106,6 @@ declare namespace fm.liveswitch {
     */
     class ClientConfig {
         getTypeString(): string;
-        constructor();
         /**<span id='method-fm.liveswitch.ClientConfig-fromJson'>&nbsp;</span>**/
         /**
          <div>
@@ -44579,13 +46246,13 @@ declare namespace fm.liveswitch {
         @param {string} userAlias The user alias.
         @param {string} deviceId The device identifier.
         @param {string} deviceAlias The device alias.
-        @param {string} id The client identifier.
+        @param {string} idValue The client identifier.
         @param {string} tag The client tag.
         @param {string[]} roles The client roles.
         @param {string} region The client's region.
         @return {}
         */
-        constructor(userId: string, userAlias: string, deviceId: string, deviceAlias: string, id: string, tag: string, roles: string[], region: string);
+        constructor(userId: string, userAlias: string, deviceId: string, deviceAlias: string, idValue: string, tag: string, roles: string[], region: string);
         /**<span id='method-fm.liveswitch.ClientInfo-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -44596,12 +46263,12 @@ declare namespace fm.liveswitch {
         @param {string} userAlias The user alias.
         @param {string} deviceId The device identifier.
         @param {string} deviceAlias The device alias.
-        @param {string} id The client identifier.
+        @param {string} idValue The client identifier.
         @param {string} tag The client tag.
         @param {string[]} roles The client roles.
         @return {}
         */
-        constructor(userId: string, userAlias: string, deviceId: string, deviceAlias: string, id: string, tag: string, roles: string[]);
+        constructor(userId: string, userAlias: string, deviceId: string, deviceAlias: string, idValue: string, tag: string, roles: string[]);
         /**<span id='method-fm.liveswitch.ClientInfo-fromJson'>&nbsp;</span>**/
         /**
          <div>
@@ -44738,11 +46405,11 @@ declare namespace fm.liveswitch {
 
         @param {string} userId The user identifier.
         @param {string} deviceId The device identifier.
-        @param {string} id The client identifier.
+        @param {string} idValue The client identifier.
         @return {boolean} true if equivalent; otherwise, false.
  
         */
-        isEquivalent(userId: string, deviceId: string, id: string): boolean;
+        isEquivalent(userId: string, deviceId: string, idValue: string): boolean;
         /**<span id='method-fm.liveswitch.ClientInfo-isEquivalent'>&nbsp;</span>**/
         /**
          <div>
@@ -44786,17 +46453,7 @@ declare namespace fm.liveswitch {
     */
     class ConnectionConfig {
         getTypeString(): string;
-        private fmliveswitchConnectionConfigInit();
-        /**<span id='method-fm.liveswitch.ConnectionConfig-constructor'>&nbsp;</span>**/
-        /**
-         <div>
-         Create an instance of a ConnectionConfig.
-         </div>
-
-
-        @return {}
-        */
-        constructor();
+        private fmliveswitchConnectionConfigInit;
         /**<span id='method-fm.liveswitch.ConnectionConfig-fromJson'>&nbsp;</span>**/
         /**
          <div>
@@ -44831,6 +46488,16 @@ declare namespace fm.liveswitch {
         @return {string}
         */
         getAudioDirection(): string;
+        /**<span id='method-fm.liveswitch.ConnectionConfig-getDataDirection'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the data direction ("sendrecv", "sendonly", "recvonly", or "inactive").
+         </div>
+
+
+        @return {string}
+        */
+        getDataDirection(): string;
         /**<span id='method-fm.liveswitch.ConnectionConfig-getLocalAudioDisabled'>&nbsp;</span>**/
         /**
          <div>
@@ -44851,6 +46518,16 @@ declare namespace fm.liveswitch {
         @return {boolean}
         */
         getLocalAudioMuted(): boolean;
+        /**<span id='method-fm.liveswitch.ConnectionConfig-getLocalDataDisabled'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets if local data is disabled.
+         </div>
+
+
+        @return {boolean}
+        */
+        getLocalDataDisabled(): boolean;
         /**<span id='method-fm.liveswitch.ConnectionConfig-getLocalVideoDisabled'>&nbsp;</span>**/
         /**
          <div>
@@ -44881,6 +46558,16 @@ declare namespace fm.liveswitch {
         @return {boolean}
         */
         getRemoteAudioDisabled(): boolean;
+        /**<span id='method-fm.liveswitch.ConnectionConfig-getRemoteDataDisabled'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets if remote data is disabled.
+         </div>
+
+
+        @return {boolean}
+        */
+        getRemoteDataDisabled(): boolean;
         /**<span id='method-fm.liveswitch.ConnectionConfig-getRemoteVideoDisabled'>&nbsp;</span>**/
         /**
          <div>
@@ -44922,6 +46609,17 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         setAudioDirection(value: string): void;
+        /**<span id='method-fm.liveswitch.ConnectionConfig-setDataDirection'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the data direction ("sendrecv", "sendonly", "recvonly", or "inactive").
+         </div>
+
+
+        @param {string} value
+        @return {void}
+        */
+        setDataDirection(value: string): void;
         /**<span id='method-fm.liveswitch.ConnectionConfig-setLocalAudioDisabled'>&nbsp;</span>**/
         /**
          <div>
@@ -44944,6 +46642,17 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         setLocalAudioMuted(value: boolean): void;
+        /**<span id='method-fm.liveswitch.ConnectionConfig-setLocalDataDisabled'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets if local data is disabled.
+         </div>
+
+
+        @param {boolean} value
+        @return {void}
+        */
+        setLocalDataDisabled(value: boolean): void;
         /**<span id='method-fm.liveswitch.ConnectionConfig-setLocalVideoDisabled'>&nbsp;</span>**/
         /**
          <div>
@@ -44977,6 +46686,17 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         setRemoteAudioDisabled(value: boolean): void;
+        /**<span id='method-fm.liveswitch.ConnectionConfig-setRemoteDataDisabled'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets if remote data is disabled.
+         </div>
+
+
+        @param {boolean} value
+        @return {void}
+        */
+        setRemoteDataDisabled(value: boolean): void;
         /**<span id='method-fm.liveswitch.ConnectionConfig-setRemoteVideoDisabled'>&nbsp;</span>**/
         /**
          <div>
@@ -45031,29 +46751,7 @@ declare namespace fm.liveswitch {
     */
     class ConnectionInfo {
         getTypeString(): string;
-        private fmliveswitchConnectionInfoInit();
-        /**<span id='method-fm.liveswitch.ConnectionInfo-constructor'>&nbsp;</span>**/
-        /**
-         <div>
-         Initializes a new instance of the `fm.liveswitch.connectionInfo` class.
-         </div>
-
-        @param {string} userId The user identifier.
-        @param {string} deviceId The device identifier.
-        @param {string} clientId The client identifier.
-        @param {string} id The connection identifier.
-        @param {string} type The connection type.
-        @param {string} tag The connection tag.
-        @param {boolean} localAudioMuted The audio muted boolean.
-        @param {boolean} localVideoMuted The video muted boolean.
-        @param {string} audioDirection The audio direction.
-        @param {string} videoDirection The video direction.
-        @param {fm.liveswitch.FormatInfo[]} audioFormats The audio format.
-        @param {fm.liveswitch.FormatInfo[]} videoFormats The video format.
-        @return {}
-        */
-        constructor(userId: string, deviceId: string, clientId: string, id: string, type: string, tag: string, localAudioMuted: boolean, localVideoMuted: boolean, audioDirection: string, videoDirection: string, audioFormats: fm.liveswitch.FormatInfo[], videoFormats: fm.liveswitch.FormatInfo[]);
-        constructor();
+        private fmliveswitchConnectionInfoInit;
         /**<span id='method-fm.liveswitch.ConnectionInfo-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -45067,18 +46765,44 @@ declare namespace fm.liveswitch {
         @param {string} clientId The client identifier.
         @param {string} clientTag The client tag.
         @param {string[]} clientRoles The client roles.
-        @param {string} id The connection identifier.
+        @param {string} idValue The connection identifier.
         @param {string} tag The connection tag.
         @param {string} type The connection type.
+        @param {string} mediaId The media identifier.
         @param {boolean} localAudioMuted The audio muted boolean.
         @param {boolean} localVideoMuted The video muted boolean.
         @param {string} audioDirection The audio direction.
         @param {string} videoDirection The video direction.
-        @param {fm.liveswitch.FormatInfo[]} audioFormats The audio format.
-        @param {fm.liveswitch.FormatInfo[]} videoFormats The video format.
+        @param {string} dataDirection The data direction.
+        @param {fm.liveswitch.FormatInfo[]} audioFormats The audio formats.
+        @param {fm.liveswitch.FormatInfo[]} videoFormats The video formats.
         @return {}
         */
-        constructor(userId: string, userAlias: string, deviceId: string, deviceAlias: string, clientId: string, clientTag: string, clientRoles: string[], id: string, tag: string, type: string, localAudioMuted: boolean, localVideoMuted: boolean, audioDirection: string, videoDirection: string, audioFormats: fm.liveswitch.FormatInfo[], videoFormats: fm.liveswitch.FormatInfo[]);
+        constructor(userId: string, userAlias: string, deviceId: string, deviceAlias: string, clientId: string, clientTag: string, clientRoles: string[], idValue: string, tag: string, type: string, mediaId: string, localAudioMuted: boolean, localVideoMuted: boolean, audioDirection: string, videoDirection: string, dataDirection: string, audioFormats: fm.liveswitch.FormatInfo[], videoFormats: fm.liveswitch.FormatInfo[]);
+        /**<span id='method-fm.liveswitch.ConnectionInfo-constructor'>&nbsp;</span>**/
+        /**
+         <div>
+         Initializes a new instance of the `fm.liveswitch.connectionInfo` class.
+         </div>
+
+        @param {string} userId The user identifier.
+        @param {string} deviceId The device identifier.
+        @param {string} clientId The client identifier.
+        @param {string} idValue The connection identifier.
+        @param {string} tag The connection tag.
+        @param {string} type The connection type.
+        @param {string} mediaId The media identifier.
+        @param {boolean} localAudioMuted The audio muted boolean.
+        @param {boolean} localVideoMuted The video muted boolean.
+        @param {string} audioDirection The audio direction.
+        @param {string} videoDirection The video direction.
+        @param {string} dataDirection The data direction.
+        @param {fm.liveswitch.FormatInfo[]} audioFormats The audio formats.
+        @param {fm.liveswitch.FormatInfo[]} videoFormats The video formats.
+        @return {}
+        */
+        constructor(userId: string, deviceId: string, clientId: string, idValue: string, tag: string, type: string, mediaId: string, localAudioMuted: boolean, localVideoMuted: boolean, audioDirection: string, videoDirection: string, dataDirection: string, audioFormats: fm.liveswitch.FormatInfo[], videoFormats: fm.liveswitch.FormatInfo[]);
+        constructor();
         /**<span id='method-fm.liveswitch.ConnectionInfo-fromJson'>&nbsp;</span>**/
         /**
          <div>
@@ -45150,7 +46874,7 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.ConnectionInfo-getAudioFormats'>&nbsp;</span>**/
         /**
          <div>
-         Gets the audio formats.
+         Gets the audio formats, if applicable.
          </div>
 
 
@@ -45187,6 +46911,16 @@ declare namespace fm.liveswitch {
         @return {string}
         */
         getClientTag(): string;
+        /**<span id='method-fm.liveswitch.ConnectionInfo-getDataDirection'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the data stream direction.
+         </div>
+
+
+        @return {string}
+        */
+        getDataDirection(): string;
         /**<span id='method-fm.liveswitch.ConnectionInfo-getDeviceAlias'>&nbsp;</span>**/
         /**
          <div>
@@ -45207,6 +46941,39 @@ declare namespace fm.liveswitch {
         @return {string}
         */
         getDeviceId(): string;
+        /**<span id='method-fm.liveswitch.ConnectionInfo-getHasAudio'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets a value indicating whether the connection
+         includes an audio stream.
+         </div>
+
+
+        @return {boolean}
+        */
+        getHasAudio(): boolean;
+        /**<span id='method-fm.liveswitch.ConnectionInfo-getHasData'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets a value indicating whether the connection
+         includes a data stream.
+         </div>
+
+
+        @return {boolean}
+        */
+        getHasData(): boolean;
+        /**<span id='method-fm.liveswitch.ConnectionInfo-getHasVideo'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets a value indicating whether the connection
+         includes a video stream.
+         </div>
+
+
+        @return {boolean}
+        */
+        getHasVideo(): boolean;
         /**<span id='method-fm.liveswitch.ConnectionInfo-getId'>&nbsp;</span>**/
         /**
          <div>
@@ -45257,6 +47024,16 @@ declare namespace fm.liveswitch {
         @return {boolean}
         */
         getLocalVideoMuted(): boolean;
+        /**<span id='method-fm.liveswitch.ConnectionInfo-getMediaId'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the media identifier.
+         </div>
+
+
+        @return {string}
+        */
+        getMediaId(): string;
         /**<span id='method-fm.liveswitch.ConnectionInfo-getRemoteAudioDisabled'>&nbsp;</span>**/
         /**
          <div>
@@ -45330,7 +47107,7 @@ declare namespace fm.liveswitch {
         /**<span id='method-fm.liveswitch.ConnectionInfo-getVideoFormats'>&nbsp;</span>**/
         /**
          <div>
-         Gets the video formats.
+         Gets the video formats, if applicable.
          </div>
 
 
@@ -45343,25 +47120,25 @@ declare namespace fm.liveswitch {
          Tests for equivalency.
          </div>
 
-        @param {string} userId The user identifier.
-        @param {string} deviceId The device identifier.
-        @param {string} clientId The client identifier.
-        @param {string} id The connection identifier.
+        @param {fm.liveswitch.ConnectionInfo} connectionInfo The connection information.
         @return {boolean} true if equivalent; otherwise, false.
  
         */
-        isEquivalent(userId: string, deviceId: string, clientId: string, id: string): boolean;
+        isEquivalent(connectionInfo: fm.liveswitch.ConnectionInfo): boolean;
         /**<span id='method-fm.liveswitch.ConnectionInfo-isEquivalent'>&nbsp;</span>**/
         /**
          <div>
          Tests for equivalency.
          </div>
 
-        @param {fm.liveswitch.ConnectionInfo} connectionInfo The connection information.
+        @param {string} userId The user identifier.
+        @param {string} deviceId The device identifier.
+        @param {string} clientId The client identifier.
+        @param {string} idValue The connection identifier.
         @return {boolean} true if equivalent; otherwise, false.
  
         */
-        isEquivalent(connectionInfo: fm.liveswitch.ConnectionInfo): boolean;
+        isEquivalent(userId: string, deviceId: string, clientId: string, idValue: string): boolean;
         /**<span id='method-fm.liveswitch.ConnectionInfo-setLocalAudioDisabled'>&nbsp;</span>**/
         /**
          <div>
@@ -45575,9 +47352,11 @@ declare namespace fm.liveswitch {
 
         @param {string} message The message.
         @param {string} remoteUserId The remote user identifier.
+        @param {string} remoteDeviceId The remote device identifier.
+        @param {string} remoteClientId The remote client identifier.
         @return {fm.liveswitch.Message}
         */
-        static createMessageMessage(message: string, remoteUserId: string): fm.liveswitch.Message;
+        static createMessageMessage(message: string, remoteUserId: string, remoteDeviceId: string, remoteClientId: string): fm.liveswitch.Message;
         /**<span id='method-fm.liveswitch.Message-createMessageMessage'>&nbsp;</span>**/
         /**
          <div>
@@ -45598,11 +47377,9 @@ declare namespace fm.liveswitch {
 
         @param {string} message The message.
         @param {string} remoteUserId The remote user identifier.
-        @param {string} remoteDeviceId The remote device identifier.
-        @param {string} remoteClientId The remote client identifier.
         @return {fm.liveswitch.Message}
         */
-        static createMessageMessage(message: string, remoteUserId: string, remoteDeviceId: string, remoteClientId: string): fm.liveswitch.Message;
+        static createMessageMessage(message: string, remoteUserId: string): fm.liveswitch.Message;
         /**<span id='method-fm.liveswitch.Message-createMessageMessage'>&nbsp;</span>**/
         /**
          <div>
@@ -45712,6 +47489,18 @@ declare namespace fm.liveswitch {
         @return {fm.liveswitch.Message}
         */
         static createSfuOfferMessage(tag: string, offerJson: string, remoteUserId: string, remoteDeviceId: string, remoteClientId: string, remoteConnectionId: string): fm.liveswitch.Message;
+        /**<span id='method-fm.liveswitch.Message-createSfuOfferMessage'>&nbsp;</span>**/
+        /**
+         <div>
+         Creates an SFU downstream "offer" message.
+         </div>
+
+        @param {string} tag The tag.
+        @param {string} offerJson The offer.
+        @param {string} remoteMediaId The remote media identifier.
+        @return {fm.liveswitch.Message}
+        */
+        static createSfuOfferMessage(tag: string, offerJson: string, remoteMediaId: string): fm.liveswitch.Message;
         /**<span id='method-fm.liveswitch.Message-createSfuOfferMessage'>&nbsp;</span>**/
         /**
          <div>
@@ -45933,6 +47722,16 @@ declare namespace fm.liveswitch {
         @return {string}
         */
         getDeviceId(): string;
+        /**<span id='method-fm.liveswitch.Message-getMediaId'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the broadcast identifier.
+         </div>
+
+
+        @return {string}
+        */
+        getMediaId(): string;
         /**<span id='method-fm.liveswitch.Message-getMediaServerId'>&nbsp;</span>**/
         /**
          <div>
@@ -45983,6 +47782,16 @@ declare namespace fm.liveswitch {
         @return {string}
         */
         getRemoteDeviceId(): string;
+        /**<span id='method-fm.liveswitch.Message-getRemoteMediaId'>&nbsp;</span>**/
+        /**
+         <div>
+         Gets the remote broadcast identifier.
+         </div>
+
+
+        @return {string}
+        */
+        getRemoteMediaId(): string;
         /**<span id='method-fm.liveswitch.Message-getRemoteUserId'>&nbsp;</span>**/
         /**
          <div>
@@ -46154,6 +47963,17 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         setDeviceId(value: string): void;
+        /**<span id='method-fm.liveswitch.Message-setMediaId'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the broadcast identifier.
+         </div>
+
+
+        @param {string} value
+        @return {void}
+        */
+        setMediaId(value: string): void;
         /**<span id='method-fm.liveswitch.Message-setMediaServerId'>&nbsp;</span>**/
         /**
          <div>
@@ -46209,6 +48029,17 @@ declare namespace fm.liveswitch {
         @return {void}
         */
         setRemoteDeviceId(value: string): void;
+        /**<span id='method-fm.liveswitch.Message-setRemoteMediaId'>&nbsp;</span>**/
+        /**
+         <div>
+         Sets the remote broadcast identifier.
+         </div>
+
+
+        @param {string} value
+        @return {void}
+        */
+        setRemoteMediaId(value: string): void;
         /**<span id='method-fm.liveswitch.Message-setRemoteUserId'>&nbsp;</span>**/
         /**
          <div>
@@ -46564,19 +48395,6 @@ declare namespace fm.liveswitch {
          Generates a signed client join token.
          </div>
 
-        @param {fm.liveswitch.Client} client The client.
-        @param {fm.liveswitch.ChannelClaim} channelClaim The channel claim.
-        @param {string} sharedSecret The shared secret.
-        @param {fm.liveswitch.DateTime} expirationTime The time the token will expire in UTC.
-        @return {string}
-        */
-        static generateClientJoinToken(client: fm.liveswitch.Client, channelClaim: fm.liveswitch.ChannelClaim, sharedSecret: string, expirationTime: fm.liveswitch.DateTime): string;
-        /**<span id='method-fm.liveswitch.Token-generateClientJoinToken'>&nbsp;</span>**/
-        /**
-         <div>
-         Generates a signed client join token.
-         </div>
-
         @param {string} applicationId The application identifier.
         @param {string} userId The user identifier.
         @param {string} deviceId The device identifier.
@@ -46614,6 +48432,31 @@ declare namespace fm.liveswitch {
         @return {string}
         */
         static generateClientJoinToken(applicationId: string, userId: string, deviceId: string, clientId: string, channelClaim: fm.liveswitch.ChannelClaim, sharedSecret: string): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientJoinToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client join token.
+         </div>
+
+        @param {fm.liveswitch.Client} client The client.
+        @param {fm.liveswitch.ChannelClaim} channelClaim The channel claim.
+        @param {string} sharedSecret The shared secret.
+        @param {fm.liveswitch.DateTime} expirationTime The time the token will expire in UTC.
+        @return {string}
+        */
+        static generateClientJoinToken(client: fm.liveswitch.Client, channelClaim: fm.liveswitch.ChannelClaim, sharedSecret: string, expirationTime: fm.liveswitch.DateTime): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {fm.liveswitch.Client} client The client.
+        @param {string} channelId The channel identifier.
+        @param {string} sharedSecret The shared secret.
+        @return {string}
+        */
+        static generateClientRegisterToken(client: fm.liveswitch.Client, channelId: string, sharedSecret: string): string;
         /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
         /**
          <div>
@@ -46625,13 +48468,23 @@ declare namespace fm.liveswitch {
         @param {string} deviceId The device identifier.
         @param {string} clientId The client identifier.
         @param {string[]} clientRoles The client roles.
-        @param {fm.liveswitch.ChannelClaim[]} channelClaims The channel claims.
+        @param {string} channelId The channel identifier.
         @param {string} sharedSecret The shared secret.
-        @param {fm.liveswitch.DateTime} expirationTime The time the token will expire in UTC.
-        @param {string} region The region of the client.
         @return {string}
         */
-        static generateClientRegisterToken(applicationId: string, userId: string, deviceId: string, clientId: string, clientRoles: string[], channelClaims: fm.liveswitch.ChannelClaim[], sharedSecret: string, expirationTime: fm.liveswitch.DateTime, region: string): string;
+        static generateClientRegisterToken(applicationId: string, userId: string, deviceId: string, clientId: string, clientRoles: string[], channelId: string, sharedSecret: string): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {fm.liveswitch.Client} client The client.
+        @param {string[]} channelIds The channel identifiers.
+        @param {string} sharedSecret The shared secret.
+        @return {string}
+        */
+        static generateClientRegisterToken(client: fm.liveswitch.Client, channelIds: string[], sharedSecret: string): string;
         /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
         /**
          <div>
@@ -46641,11 +48494,43 @@ declare namespace fm.liveswitch {
         @param {fm.liveswitch.Client} client The client.
         @param {fm.liveswitch.ChannelClaim[]} channelClaims The channel claims.
         @param {string} sharedSecret The shared secret.
-        @param {fm.liveswitch.DateTime} expirationTime The time the token will expire in UTC.
+        @return {string}
+        */
+        static generateClientRegisterToken(client: fm.liveswitch.Client, channelClaims: fm.liveswitch.ChannelClaim[], sharedSecret: string): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {string} applicationId The application identifier.
+        @param {string} userId The user identifier.
+        @param {string} deviceId The device identifier.
+        @param {string} clientId The client identifier.
+        @param {string[]} clientRoles The client roles.
+        @param {string} channelId The channel identifier.
+        @param {string} sharedSecret The shared secret.
         @param {string} region The region of the client.
         @return {string}
         */
-        static generateClientRegisterToken(client: fm.liveswitch.Client, channelClaims: fm.liveswitch.ChannelClaim[], sharedSecret: string, expirationTime: fm.liveswitch.DateTime, region: string): string;
+        static generateClientRegisterToken(applicationId: string, userId: string, deviceId: string, clientId: string, clientRoles: string[], channelId: string, sharedSecret: string, region: string): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {string} applicationId The application identifier.
+        @param {string} userId The user identifier.
+        @param {string} deviceId The device identifier.
+        @param {string} clientId The client identifier.
+        @param {string[]} clientRoles The client roles.
+        @param {string[]} channelIds The channel identifiers.
+        @param {string} sharedSecret The shared secret.
+        @param {string} region The region of the client.
+        @return {string}
+        */
+        static generateClientRegisterToken(applicationId: string, userId: string, deviceId: string, clientId: string, clientRoles: string[], channelIds: string[], sharedSecret: string, region: string): string;
         /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
         /**
          <div>
@@ -46659,6 +48544,70 @@ declare namespace fm.liveswitch {
         @return {string}
         */
         static generateClientRegisterToken(client: fm.liveswitch.Client, channelClaims: fm.liveswitch.ChannelClaim[], sharedSecret: string, region: string): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {string} applicationId The application identifier.
+        @param {string} userId The user identifier.
+        @param {string} deviceId The device identifier.
+        @param {string} clientId The client identifier.
+        @param {string[]} clientRoles The client roles.
+        @param {fm.liveswitch.ChannelClaim[]} channelClaims The channel claims.
+        @param {string} sharedSecret The shared secret.
+        @param {string} region The region of the client.
+        @return {string}
+        */
+        static generateClientRegisterToken(applicationId: string, userId: string, deviceId: string, clientId: string, clientRoles: string[], channelClaims: fm.liveswitch.ChannelClaim[], sharedSecret: string, region: string): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {string} applicationId The application identifier.
+        @param {string} userId The user identifier.
+        @param {string} deviceId The device identifier.
+        @param {string} clientId The client identifier.
+        @param {string[]} clientRoles The client roles.
+        @param {string[]} channelIds The channel identifiers.
+        @param {string} sharedSecret The shared secret.
+        @param {fm.liveswitch.DateTime} expirationTime The time the token will expire in UTC.
+        @return {string}
+        */
+        static generateClientRegisterToken(applicationId: string, userId: string, deviceId: string, clientId: string, clientRoles: string[], channelIds: string[], sharedSecret: string, expirationTime: fm.liveswitch.DateTime): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {string} applicationId The application identifier.
+        @param {string} userId The user identifier.
+        @param {string} deviceId The device identifier.
+        @param {string} clientId The client identifier.
+        @param {string[]} clientRoles The client roles.
+        @param {string} channelId The channel identifier.
+        @param {string} sharedSecret The shared secret.
+        @param {fm.liveswitch.DateTime} expirationTime The time the token will expire in UTC.
+        @return {string}
+        */
+        static generateClientRegisterToken(applicationId: string, userId: string, deviceId: string, clientId: string, clientRoles: string[], channelId: string, sharedSecret: string, expirationTime: fm.liveswitch.DateTime): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {fm.liveswitch.Client} client The client.
+        @param {string} channelId The channel identifier.
+        @param {string} sharedSecret The shared secret.
+        @param {string} region The region of the client.
+        @return {string}
+        */
+        static generateClientRegisterToken(client: fm.liveswitch.Client, channelId: string, sharedSecret: string, region: string): string;
         /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
         /**
          <div>
@@ -46695,35 +48644,6 @@ declare namespace fm.liveswitch {
          Generates a signed client register token.
          </div>
 
-        @param {fm.liveswitch.Client} client The client.
-        @param {fm.liveswitch.ChannelClaim[]} channelClaims The channel claims.
-        @param {string} sharedSecret The shared secret.
-        @return {string}
-        */
-        static generateClientRegisterToken(client: fm.liveswitch.Client, channelClaims: fm.liveswitch.ChannelClaim[], sharedSecret: string): string;
-        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
-        /**
-         <div>
-         Generates a signed client register token.
-         </div>
-
-        @param {string} applicationId The application identifier.
-        @param {string} userId The user identifier.
-        @param {string} deviceId The device identifier.
-        @param {string} clientId The client identifier.
-        @param {string[]} clientRoles The client roles.
-        @param {fm.liveswitch.ChannelClaim[]} channelClaims The channel claims.
-        @param {string} sharedSecret The shared secret.
-        @param {string} region The region of the client.
-        @return {string}
-        */
-        static generateClientRegisterToken(applicationId: string, userId: string, deviceId: string, clientId: string, clientRoles: string[], channelClaims: fm.liveswitch.ChannelClaim[], sharedSecret: string, region: string): string;
-        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
-        /**
-         <div>
-         Generates a signed client register token.
-         </div>
-
         @param {string} applicationId The application identifier.
         @param {string} userId The user identifier.
         @param {string} deviceId The device identifier.
@@ -46734,17 +48654,157 @@ declare namespace fm.liveswitch {
         @return {string}
         */
         static generateClientRegisterToken(applicationId: string, userId: string, deviceId: string, clientId: string, clientRoles: string[], channelClaims: fm.liveswitch.ChannelClaim[], sharedSecret: string): string;
-        /**<span id='method-fm.liveswitch.Token-generateConnectorRegisterToken'>&nbsp;</span>**/
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
         /**
          <div>
-         Generates a signed connector register token.
+         Generates a signed client register token.
          </div>
 
-        @param {string} connectorId The connector identifier.
+        @param {string} applicationId The application identifier.
+        @param {string} userId The user identifier.
+        @param {string} deviceId The device identifier.
+        @param {string} clientId The client identifier.
+        @param {string[]} clientRoles The client roles.
+        @param {string[]} channelIds The channel identifiers.
         @param {string} sharedSecret The shared secret.
         @return {string}
         */
-        static generateConnectorRegisterToken(connectorId: string, sharedSecret: string): string;
+        static generateClientRegisterToken(applicationId: string, userId: string, deviceId: string, clientId: string, clientRoles: string[], channelIds: string[], sharedSecret: string): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {fm.liveswitch.Client} client The client.
+        @param {string[]} channelIds The channel identifiers.
+        @param {string} sharedSecret The shared secret.
+        @param {string} region The region of the client.
+        @return {string}
+        */
+        static generateClientRegisterToken(client: fm.liveswitch.Client, channelIds: string[], sharedSecret: string, region: string): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {fm.liveswitch.Client} client The client.
+        @param {string} channelId The channel identifier.
+        @param {string} sharedSecret The shared secret.
+        @param {fm.liveswitch.DateTime} expirationTime The time the token will expire in UTC.
+        @return {string}
+        */
+        static generateClientRegisterToken(client: fm.liveswitch.Client, channelId: string, sharedSecret: string, expirationTime: fm.liveswitch.DateTime): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {fm.liveswitch.Client} client The client.
+        @param {string} channelId The channel identifier.
+        @param {string} sharedSecret The shared secret.
+        @param {fm.liveswitch.DateTime} expirationTime The time the token will expire in UTC.
+        @param {string} region The region of the client.
+        @return {string}
+        */
+        static generateClientRegisterToken(client: fm.liveswitch.Client, channelId: string, sharedSecret: string, expirationTime: fm.liveswitch.DateTime, region: string): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {fm.liveswitch.Client} client The client.
+        @param {string[]} channelIds The channel identifiers.
+        @param {string} sharedSecret The shared secret.
+        @param {fm.liveswitch.DateTime} expirationTime The time the token will expire in UTC.
+        @return {string}
+        */
+        static generateClientRegisterToken(client: fm.liveswitch.Client, channelIds: string[], sharedSecret: string, expirationTime: fm.liveswitch.DateTime): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {fm.liveswitch.Client} client The client.
+        @param {fm.liveswitch.ChannelClaim[]} channelClaims The channel claims.
+        @param {string} sharedSecret The shared secret.
+        @param {fm.liveswitch.DateTime} expirationTime The time the token will expire in UTC.
+        @param {string} region The region of the client.
+        @return {string}
+        */
+        static generateClientRegisterToken(client: fm.liveswitch.Client, channelClaims: fm.liveswitch.ChannelClaim[], sharedSecret: string, expirationTime: fm.liveswitch.DateTime, region: string): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {string} applicationId The application identifier.
+        @param {string} userId The user identifier.
+        @param {string} deviceId The device identifier.
+        @param {string} clientId The client identifier.
+        @param {string[]} clientRoles The client roles.
+        @param {fm.liveswitch.ChannelClaim[]} channelClaims The channel claims.
+        @param {string} sharedSecret The shared secret.
+        @param {fm.liveswitch.DateTime} expirationTime The time the token will expire in UTC.
+        @param {string} region The region of the client.
+        @return {string}
+        */
+        static generateClientRegisterToken(applicationId: string, userId: string, deviceId: string, clientId: string, clientRoles: string[], channelClaims: fm.liveswitch.ChannelClaim[], sharedSecret: string, expirationTime: fm.liveswitch.DateTime, region: string): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {string} applicationId The application identifier.
+        @param {string} userId The user identifier.
+        @param {string} deviceId The device identifier.
+        @param {string} clientId The client identifier.
+        @param {string[]} clientRoles The client roles.
+        @param {string[]} channelIds The channel identifiers.
+        @param {string} sharedSecret The shared secret.
+        @param {fm.liveswitch.DateTime} expirationTime The time the token will expire in UTC.
+        @param {string} region The region of the client.
+        @return {string}
+        */
+        static generateClientRegisterToken(applicationId: string, userId: string, deviceId: string, clientId: string, clientRoles: string[], channelIds: string[], sharedSecret: string, expirationTime: fm.liveswitch.DateTime, region: string): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {fm.liveswitch.Client} client The client.
+        @param {string[]} channelIds The channel identifiers.
+        @param {string} sharedSecret The shared secret.
+        @param {fm.liveswitch.DateTime} expirationTime The time the token will expire in UTC.
+        @param {string} region The region of the client.
+        @return {string}
+        */
+        static generateClientRegisterToken(client: fm.liveswitch.Client, channelIds: string[], sharedSecret: string, expirationTime: fm.liveswitch.DateTime, region: string): string;
+        /**<span id='method-fm.liveswitch.Token-generateClientRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed client register token.
+         </div>
+
+        @param {string} applicationId The application identifier.
+        @param {string} userId The user identifier.
+        @param {string} deviceId The device identifier.
+        @param {string} clientId The client identifier.
+        @param {string[]} clientRoles The client roles.
+        @param {string} channelId The channel identifier.
+        @param {string} sharedSecret The shared secret.
+        @param {fm.liveswitch.DateTime} expirationTime The time the token will expire in UTC.
+        @param {string} region The region of the client.
+        @return {string}
+        */
+        static generateClientRegisterToken(applicationId: string, userId: string, deviceId: string, clientId: string, clientRoles: string[], channelId: string, sharedSecret: string, expirationTime: fm.liveswitch.DateTime, region: string): string;
         /**<span id='method-fm.liveswitch.Token-generateConnectorRegisterToken'>&nbsp;</span>**/
         /**
          <div>
@@ -46757,6 +48817,17 @@ declare namespace fm.liveswitch {
         @return {string}
         */
         static generateConnectorRegisterToken(connectorId: string, sharedSecret: string, expirationTime: fm.liveswitch.DateTime): string;
+        /**<span id='method-fm.liveswitch.Token-generateConnectorRegisterToken'>&nbsp;</span>**/
+        /**
+         <div>
+         Generates a signed connector register token.
+         </div>
+
+        @param {string} connectorId The connector identifier.
+        @param {string} sharedSecret The shared secret.
+        @return {string}
+        */
+        static generateConnectorRegisterToken(connectorId: string, sharedSecret: string): string;
         /**<span id='method-fm.liveswitch.Token-generateMediaServerRegisterToken'>&nbsp;</span>**/
         /**
          <div>
@@ -47015,7 +49086,7 @@ declare namespace fm.liveswitch {
     */
     class VideoLayout {
         getTypeString(): string;
-        private fmliveswitchVideoLayoutInit();
+        private fmliveswitchVideoLayoutInit;
         /**<span id='method-fm.liveswitch.VideoLayout-constructor'>&nbsp;</span>**/
         /**
          <div>
@@ -47276,6 +49347,8 @@ declare namespace fm.liveswitch {
         */
         getUserId(): string;
     }
+}
+declare namespace fm.liveswitch {
 }
 declare namespace fm.liveswitch {
 }
