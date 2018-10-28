@@ -73,6 +73,7 @@ const remoteClientList: Reducer<RemoteClientList> = (remoteClientList = {}, acti
 const localMediaList: Reducer<LocalMediaList> = (localMediaList = {}, action: RtcActions.Base) => {
   switch(action.type) {
     case "WebcamCaptureResolve":               return {...localMediaList, [action.payload.mediaId]: {...action.payload, sfuConnectionId: null}};
+    case "ScreenCaptureSucceed":               return {...localMediaList, [action.payload.mediaId]: {...action.payload, sfuConnectionId: null}};
     case "LocalMediaReleaseResolve":           return omit(localMediaList, action.payload.mediaId);
     default: return localMediaList;
   }

@@ -68,6 +68,22 @@ export interface WebcamCaptureReject extends ActionWithPayload {
   type: "WebcamCaptureReject"
 }
 
+export interface ScreenCaptureTry extends ActionWithPayload {
+  type: "ScreenCaptureTry"
+}
+
+export interface ScreenCaptureSucceed extends ActionWithPayload {
+  type: "ScreenCaptureSucceed",
+  payload: {
+    mediaId: string,
+    name: string
+  }
+}
+
+export interface ScreenCaptureFail extends ActionWithPayload {
+  type: "ScreenCaptureFail"
+}
+
 export interface LocalMediaReleaseRequest extends ActionWithPayload {
   type: "LocalMediaReleaseRequest"
   payload: {
@@ -290,6 +306,9 @@ export type Base =
   | LocalMediaReleaseRequest 
   | LocalMediaReleaseResolve 
   | LocalMediaReleaseReject 
+  | ScreenCaptureTry
+  | ScreenCaptureSucceed
+  | ScreenCaptureFail
   | RemoteClientCreate 
   | RemoteClientDestroy 
   | RemoteMediaCreate 

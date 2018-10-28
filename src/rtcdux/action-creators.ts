@@ -22,7 +22,53 @@ export const ServerConnectRequest: ActionCreator<RtcActions.ServerConnectRequest
   return { type: "ServerConnectRequest", payload: {}  }
 }
 
-export const ServerConnectResolve: ActionCreator<RtcActions.ServerConnectResolve> = (localClientId: string) => {
+export const ServerConnectResolve: ActionCreator<RtcActions.ServerConnectResolve> = (dispatch: Dispatch, localClientId: string) => {
+  // listen for messages from the content-script
+  window.addEventListener('message', (event) => {
+    // discard foreign events
+    if (event.origin !== window.window.location.origin) {
+        return;
+    }
+
+    // content-script will send a 'SS_PING' msg if extension is installed
+    if (event.data.type && (event.data.type === 'SS_PING')) {
+        //extensionInstalled = true;
+    }
+
+    // user chose a stream
+    if (event.data.type && (event.data.type === 'SS_DIALOG_SUCCESS')) {
+      let constraints = {
+        audio: false,
+        video: {
+          mandatory: {
+              chromeMediaSource: 'desktop',
+              chromeMediaSourceId: event.data.streamId,
+              maxWidth: 640,
+              maxHeight: 480
+          }
+        }
+      };
+
+      navigator.mediaDevices.getUserMedia(constraints as any).then((stream: any) => {
+        var localMedia = new fm.liveswitch.LocalMedia(stream, stream);
+        localMedia.start().then(() => {
+          var mediadId = localMedia.getId();
+          rtc.internal.localMediaList[mediadId] = localMedia;
+          dispatch(RtcActionCreators.ScreenCaptureSucceed(mediadId, "test"))
+        }).fail((error: any) => {
+          throw error;
+        });
+      }).catch((error: any) => {
+        dispatch(RtcActionCreators.ScreenCaptureFail(error))
+      });
+    }
+
+    // user clicked on 'cancel' in choose media dialog
+    if (event.data.type && (event.data.type === 'SS_DIALOG_CANCEL')) {
+      dispatch(RtcActionCreators.ScreenCaptureFail('User cancelled!'));
+    }
+  });
+
   return { type: "ServerConnectResolve", payload: {localClientId}  }
 }
 
@@ -120,6 +166,20 @@ export const WebcamCaptureResolve: ActionCreator<RtcActions.WebcamCaptureResolve
 
 export const WebcamCaptureReject: ActionCreator<RtcActions.WebcamCaptureReject> = () => {
   return { type: "WebcamCaptureReject", payload: {} }
+}
+
+export const ScreenCaptureTry: ActionCreator<RtcActions.ScreenCaptureTry> = () => {
+  window.postMessage({ type: 'SS_UI_REQUEST', text: 'start' }, '*');
+
+  return { type: "ScreenCaptureTry", payload: {} }
+}
+
+export const ScreenCaptureSucceed: ActionCreator<RtcActions.ScreenCaptureSucceed> = (mediaId: string, name: string) => { 
+  return { type: "ScreenCaptureSucceed", payload: {mediaId, name} };
+};
+
+export const ScreenCaptureFail: ActionCreator<RtcActions.ScreenCaptureFail> = () => {
+  return { type: "ScreenCaptureFail", payload: {} }
 }
 
 export const LocalMediaReleaseRequest: ActionCreator<RtcActions.LocalMediaReleaseRequest> = (mediaId: string) => { 

@@ -43,7 +43,7 @@ export const Effect = {
       rtc.internal.localClient.getDeviceId(),
       rtc.internal.localClient.getId(),
       rtc.internal.localClient.getRoles(),
-      null,
+      "",
       "--replaceThisWithYourOwnSharedSecret--"
     );
 

@@ -139,6 +139,25 @@ export function* rtcSaga(dispatch: Dispatch) {
     }
   });
 
+  
+  yield takeEvery("ScreenCaptureSucceed", function*(action: RtcActions.ScreenCaptureSucceed) {  
+    // If we are connected to a channel
+    let channelStatus = yield select((state: RtcState) => state.channelStatus);
+    if (channelStatus === "JOINED") {
+      // For each remote client, tell it to create a remote media object associated with this local media object
+      let localClientId = yield select((state: RtcState) => state.localClientId);
+      let remoteClientList = yield select((state: RtcState) => state.remoteClientList);
+      for (let remoteClientId in remoteClientList) {
+        Effect.DispatchToRemoteClient(remoteClientId, "RemoteMediaCreate", action.payload.mediaId, action.payload.name, "tyler@spatial.is", localClientId);
+      }
+
+      // Create and open an sfu upstream connection for this local media object
+      let sfuLocalUpstreamCreate = ActionCreator.SfuLocalUpstreamCreate(dispatch, action.payload.mediaId);
+      yield put(sfuLocalUpstreamCreate);
+      yield put(ActionCreator.SfuLocalUpstreamOpenRequest(sfuLocalUpstreamCreate.payload.connectionId));
+    }
+  });
+
   yield takeEvery("LocalMediaReleaseResolve", function*(action: RtcActions.LocalMediaReleaseResolve) {
     // For each remote client, tell it to destroy the remote media object associated with this local media object
     let remoteClientList = yield select((state: RtcState) => state.remoteClientList);

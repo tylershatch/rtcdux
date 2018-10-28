@@ -82,6 +82,7 @@ class Interface extends Component {
 
         <div>
           <button onClick={this.props.captureWebcam}>Add Webcam</button>
+          <button onClick={this.props.captureScreen}>Add Screen</button>
         </div>
 
         <div>
@@ -177,6 +178,10 @@ const mapDispatchToProps = (dispatch) => {
 
     captureWebcam: () => {
       dispatch(ActionCreator.WebcamCaptureRequest());
+    },
+
+    captureScreen: () => {
+      dispatch(ActionCreator.ScreenCaptureTry());
     },
 
     releaseLocalMedia: (mediaId) => {
