@@ -24,7 +24,7 @@ export const ServerConnectRequest: ActionCreator<RtcActions.ServerConnectRequest
 
 export const ServerConnectResolve: ActionCreator<RtcActions.ServerConnectResolve> = (dispatch: Dispatch, localClientId: string) => {
   // listen for messages from the content-script
-  window.addEventListener('message', (event) => {
+  window.addEventListener('message', (event: any) => {
     // discard foreign events
     if (event.origin !== window.window.location.origin) {
         return;
@@ -43,8 +43,9 @@ export const ServerConnectResolve: ActionCreator<RtcActions.ServerConnectResolve
           mandatory: {
               chromeMediaSource: 'desktop',
               chromeMediaSourceId: event.data.streamId,
-              maxWidth: 640,
-              maxHeight: 480
+              maxWidth: 1280,
+              maxHeight: 720,
+              maxFrameRate: 12
           }
         }
       };
