@@ -10,12 +10,12 @@ module.exports = {
   module: {
     rules: [
       {
-        test: require.resolve("./src/rtcdux/fm.liveswitch.js"),
+        test: require.resolve("./src/vendor/fm.liveswitch.js"),
         use: "imports-loader?define=>false",
       },
       {
         test: /\.(ts|tsx|js|jsx)$/,
-        exclude: /node_modules|src\/rtcdux\/fm.liveswitch.d.ts/,
+        exclude: /node_modules|src\/vendor\/fm.liveswitch.d.ts/,
         use: {
           loader: "ts-loader"
         }
@@ -38,6 +38,19 @@ module.exports = {
         test: /\.css$/,
         use: [MiniCssExtractPlugin.loader, "css-loader"]
       },
+      {
+        test: /\.(gif|png|jpe?g|svg)$/i,
+        use: [
+          'file-loader',
+          {
+            loader: 'image-webpack-loader',
+            options: {
+              bypassOnDebug: true, // webpack@1.x
+              disable: true, // webpack@2.x and newer
+            },
+          },
+        ],
+      }
     ]
   },
   plugins: [
@@ -51,6 +64,7 @@ module.exports = {
     })
   ],
   devServer: {
-    contentBase: 'public'
+    contentBase: 'public',
+    port: 3000
   }
 };

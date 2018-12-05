@@ -1,14 +1,17 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { connect } from 'react-redux'
 import { 
   Label,
   Button,
   FormControl
 } from 'react-bootstrap';
 
-import * as rtc from './rtcdux/rtc';
-import * as ActionCreator from './rtcdux/action-creators';
+import { Room } from './rtcdux/Room';
+import { LocalClient } from './rtcdux/LocalClient';
+import { RemoteClientManager } from './rtcdux/RemoteClients';
+import { LocalMediaManager } from './rtcdux/LocalMedia';
+import { RemoteMediaManager } from './rtcdux/RemoteMedia';
+import { SfuDownstreamManager } from './rtcdux/SfuDownstream';
 
 const LocalMedia = (props) => {
   let mediaId = props.mediaId;
@@ -16,10 +19,10 @@ const LocalMedia = (props) => {
   return (
     <div>
       <h3>MediaId: {mediaId}</h3>
-      <button onClick={() => props.releaseLocalMedia(mediaId)}>X</button>
+      <button onClick={() => {LocalMediaManager.ReleaseLocalMedia(mediaId)}}>X</button>
       <video autoPlay ref={(video) => {
         if (video !== null) {
-          video.srcObject = rtc.getLocalVideoStream(mediaId);
+          video.srcObject = LocalMediaManager.GetMedia(mediaId)._internal.video;
         }
       }}/>
     </div>
@@ -28,18 +31,18 @@ const LocalMedia = (props) => {
 
 const RemoteMedia = (props) => {
   let mediaId = props.mediaId;
-  let sfuConnectionId = props.sfuConnectionId;
 
   return (
     <div>
       <h3>MediaId: {mediaId}</h3>
-      <button disabled={!props.closed} onClick={() => props.openSfuDownstream(sfuConnectionId)}>Open</button>
-      <button disabled={!props.open} onClick={() => props.closeSfuDownstream(sfuConnectionId)}>Close</button>
+      <h4>Status: {this.props.stats}</h4>
+      <button disabled={this.props.status != "Closed"} onClick={() => SfuDownstreamManager.Open(mediaId)}>Open</button>
+      <button disabled={this.props.status == "Closed"} onClick={() => SfuDownstreamManager.Close(mediaId)}>Close</button>
       <video autoPlay 
         ref = {
           (video) => {
-            if (props.open && video !== null) {
-              video.srcObject = rtc.getRemoteVideoStream(mediaId);
+            if (this.props.status == "Open" && video !== null) {
+              video.srcObject = RemoteMediaManager.GetMedia(mediaId);
             }
           }
         }
@@ -53,44 +56,136 @@ class Interface extends Component {
     super(props);
 
     this.state = {
-      channelId: ""
+      localClientStatus: "Disconnected",
+      roomId: "",
+      roomStatus: "Disconnected",
+      remoteClientList: {},
+      localMediaList: {},
+      remoteMediaList: {},
+      sfuDownstreamStatuses: {},
     }
+
+    LocalClient.registerResolved.on((localClient) => {
+      this.setState({
+        localClientStatus: "Connected"
+      });
+    });
+
+    Room.joinResolved.on(() => {
+      this.setState({
+        roomStatus: "Connected"
+      });
+    });
+
+    Room.leaveResolved.on(() => {
+      this.setState({
+        roomStatus: "Disconnected"
+      });
+    });
+
+    RemoteClientManager.clientJoined.on((clientId) => {
+      this.setState(prevState => {
+        prevState.remoteClientList[clientId] = clientId;
+        return prevState;
+      });
+    });
+
+    RemoteClientManager.clientLeft.on((clientId) => {
+      this.setState(prevState => {
+        delete prevState.remoteClientList[clientId];
+        return prevState;
+      });
+    });
+
+    LocalMediaManager.captureResolved.on((mediaId) => {
+      this.setState(prevState => {
+        prevState.localMediaList[mediaId] = mediaId;
+        return prevState;
+      });
+    });
+
+    LocalMediaManager.releaseResolved.on((mediaId) => {
+      this.setState(prevState => {
+        delete prevState.localMediaList[mediaId];
+        return prevState;
+      });
+    });
+
+    RemoteMediaManager.created.on((mediaId) => {
+      this.setState(prevState => {
+        prevState.remoteMediaList[mediaId] = mediaId;
+        prevState.sfuDownstreamList[mediaId] = "NoUpstream";
+        return prevState;
+      });
+    });
+
+    RemoteMediaManager.destroyed.on((mediaId) => {
+      this.setState(prevState => {
+        delete prevState.remoteMediaList[mediaId];
+        delete prevState.sfuDownstreamList[mediaId];
+        return prevState;
+      });
+    });
+
+    SfuDownstreamManager.stateChanged.on((mediaId, state) => {
+      let stateString = "";
+      switch (state) {
+        case SfuDownstreamManager.State.NoUpstream: stateString = "NoUpstream"; break;
+        case SfuDownstreamManager.State.Closed: stateString = "Closed"; break;
+        case SfuDownstreamManager.State.Opening: stateString = "Opening"; break;
+        case SfuDownstreamManager.State.Open: stateString = "Open"; break;
+        case SfuDownstreamManager.State.Closing: stateString = "Closing"; break;
+      }
+
+      this.setState(prevState => {
+        prevState.sfuDownstreamStatuses[mediaId] = stateString;
+        return prevState;
+      });
+    });
   };
 
   componentDidMount() {
-    this.props.connectToServer();
+    LocalClient.Register();
   }
 
   render() {
     // Display nothing until we are connected to the server
-    if (this.props.localClientId == null) {
+    if (this.state.localClientStatus == 'Disconnected') {
       return null;
     }
 
     return (
       <div className="App">
-
         <div>
-          <Label>Channel Status: {this.props.channelStatus} | Channel Id: </Label>
+          <Label>Local Client Status: {this.state.localClientStatus}</Label>
+        </div>
+        <div>
+          <Label>Room Status: {this.state.roomStatus}</Label>
+        </div>
+        <div>
+          <Label>Channel Id: </Label>
           <FormControl type="text" 
-            value={this.state.channelId} 
-            onChange={(e) => { this.setState({channelId: e.target.value})}}
-            readOnly={!this.props.canJoinChannel}/>
-          <Button onClick={() => this.props.joinChannel(this.state.channelId)} disabled={!this.props.canJoinChannel}>Join</Button>
-          <Button onClick={() => this.props.leaveChannel()} disabled={!this.props.canLeaveChannel}>Leave</Button>
+            value={this.state.roomId} 
+            onChange={(e) => { this.setState({roomId: e.target.value})}}
+            readOnly={this.state.roomStatus == "Connected"}/>
+          <Button 
+            onClick={() => Room.Join(this.state.roomId)} 
+            disabled={this.state.roomStatus == "Connected"}
+          >Join</Button>
+          <Button onClick={() => Room.Leave()} disabled={this.state.roomStatus != "Connected"}>Leave</Button>
         </div>
 
         <div>
-          <button onClick={this.props.captureWebcam}>Add Webcam</button>
-          <button onClick={this.props.captureScreen}>Add Screen</button>
+          <button onClick={LocalMediaManager.CaptureWebcam}>Add Webcam</button>
+          <button onClick={LocalMediaManager.CaptureScreen}>Add Screen</button>
         </div>
 
         <div>
           <h2>Local Media</h2>
           {
-            Object.keys(this.props.localMediaList).map((mediaId, index) => {
+            Object.keys(this.state.localMediaList).map((mediaId, index) => {
               return (
-                <LocalMedia key={mediaId} mediaId={mediaId} releaseLocalMedia={this.props.releaseLocalMedia}/>
+                <LocalMedia key={mediaId} mediaId={mediaId}/>
               );
             })
           }
@@ -101,14 +196,13 @@ class Interface extends Component {
           <div>
             <div>
               {
-                Object.keys(this.props.remoteClientList).map((remoteClientId, index) => {
+                Object.keys(this.state.remoteClientList).map((remoteClientId, index) => {
                   return (
                     <div key={remoteClientId}>
                       <h3>RemoteClientId: {remoteClientId}</h3>
                       {
-                        Object.keys(this.props.remoteMediaList).map((mediaId, index) => {
-                          let remoteMedia = this.props.remoteMediaList[mediaId];
-                          if (remoteMedia.remoteClientId === remoteClientId) {
+                        Object.keys(this.state.remoteMediaList).map((mediaId, index) => {
+                          if (RemoteMediaManager.GetClientId(mediaId) === remoteClientId) {
                             for (let connectionId in this.props.sfuDownstreamList) {
                               let sfuDownstream = this.props.sfuDownstreamList[connectionId];
                               if (sfuDownstream.mediaId === mediaId) {
@@ -116,11 +210,9 @@ class Interface extends Component {
                                   <RemoteMedia 
                                     key={mediaId}
                                     mediaId={mediaId} 
-                                    sfuConnectionId={remoteMedia.sfuConnectionId} 
-                                    openSfuDownstream={this.props.openSfuDownstream} 
-                                    closeSfuDownstream={this.props.closeSfuDownstream}
-                                    closed={sfuDownstream.status === "NEW"}
-                                    open={sfuDownstream.status === "CONNECTED"}
+                                    openSfuDownstream={SfuDownstreamManager.Open} 
+                                    closeSfuDownstream={SfuDownstreamManager.Close} 
+                                    status={this.state.sfuDownstreamStatuses[mediaId]}
                                   />
                                 );
                               }
@@ -142,72 +234,11 @@ class Interface extends Component {
   }
 }
 
-const mapStateToProps = (state) => {
-  return {
-    localClientId: state.localClientId,
-    channelStatus: state.channelStatus,
-    remoteClientList: state.remoteClientList,
-    localMediaList: state.localMediaList,
-    remoteMediaList: state.remoteMediaList,
-    sfuDownstreamList: state.sfuDownstreamList,
-
-    canJoinChannel:
-      state.channelStatus === "NEW" ||
-      state.channelStatus === "JOIN_FAILED" ||
-      state.channelStatus === 'LEFT',
-  
-    canLeaveChannel:
-      state.channelStatus === "JOINED" ||
-      state.channelStatus === "LEAVE_FAILED",
-  }
-}
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    connectToServer: () => {
-      dispatch(ActionCreator.ServerConnectRequest());
-    },
-
-    joinChannel: (channelId) => {
-      dispatch(ActionCreator.ChannelJoinRequest(channelId));
-    },
-
-    leaveChannel: () => {
-      dispatch(ActionCreator.ChannelLeaveRequest());
-    },
-
-    captureWebcam: () => {
-      dispatch(ActionCreator.WebcamCaptureRequest());
-    },
-
-    captureScreen: () => {
-      dispatch(ActionCreator.ScreenCaptureTry());
-    },
-
-    releaseLocalMedia: (mediaId) => {
-      dispatch(ActionCreator.LocalMediaReleaseRequest(mediaId));
-    },
-    
-    openSfuDownstream: (connectionId) => {
-      dispatch(ActionCreator.SfuDownstreamOpenRequest(connectionId));
-    },
-
-    closeSfuDownstream: (connectionId) => {
-      dispatch(ActionCreator.SfuDownstreamCloseRequest(connectionId));
-    }
-  }
-}
-
-const BoundInterface = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Interface)
-
 class App extends Component {
   render() {
     return (
       <div className="App">
-        <BoundInterface />
+        <Interface />
       </div>
     );
   }
